@@ -20,6 +20,9 @@ ITunes doesnt write song info to music file metadata, cant assume that about the
 Just copy over the entire filestructure directly, so we dont worry about metadata or duplicates. That should have been handled by the music player when making the filestucture.
 
 TODO
-send over playlists
+handle sending music over direct usb link[ ]
+ability to pass info about what music to delete from phone to computer[ ]
+send over playlists[ ]
+Test what happens if song is dropped, fix it[ ]
 
 Not using, but i found and i recommend the JAVE (Java Audio Video Encoder) library for converting audio.

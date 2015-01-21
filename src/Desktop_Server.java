@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 public class Desktop_Server {
     
-    private static String musicDirectoryPath="E:/iTunes/iTunes Media/Music/";
+    private static String musicDirectoryPath="LibraryTest/";
     private static String ffmpegEXElocation="ffmpeg.exe";
     
     public static void main(String[] args) throws IOException {
@@ -69,11 +69,11 @@ public class Desktop_Server {
                 //TODO retry sending the song if we do not receive confirmation for both receive song length and song
                 //write the length to receive
                 out.println(String.valueOf(songinbyte.length));
-                    System.out.println("wrote song legth "+songinbyte.length);
+                    //System.out.println("wrote song legth "+songinbyte.length);
                     
                 //wait to receive ready confirmation
                 String confirmlength=in.readLine();
-                    System.out.println(confirmlength);
+                    //System.out.println(confirmlength);
                 
                 
                 //write the bytes to the phone (this is auto split into smaller packets)
@@ -90,6 +90,7 @@ public class Desktop_Server {
             pout.close();
             
             phone.close();
+            System.out.println("Sync finished");
         }
 
         //androidConnection.close();
