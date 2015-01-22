@@ -3,6 +3,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -13,10 +14,36 @@ import java.util.ArrayList;
 
 public class Desktop_Server {
     
-    private static String musicDirectoryPath="LibraryTest/";
-    private static String ffmpegEXElocation="ffmpeg.exe";
+    private static String musicDirectoryPath;
+    private static String ffmpegEXElocation;
+    private static String iTunesDataLibraryFile;
     
     public static void main(String[] args) throws IOException {
+        //load params from ini file
+        File inifile=new File("SongSyncInfo.ini");
+        if(!inifile.exists()){
+            System.err.println("Unable to find ini file.");
+            System.exit(0);
+        }
+        BufferedReader initfileparams=new BufferedReader(new FileReader("SongSyncInfo.ini"));
+        String line=initfileparams.readLine();
+        while(line!=null){
+            if(line.toLowerCase().contains("musicdirectorypath")){
+                musicDirectoryPath=line.substring(20);
+            }else if(line.toLowerCase().contains("ffmpegexelocation")){
+                ffmpegEXElocation=line.substring(19);
+            }else if(line.toLowerCase().contains("itunesdatalibraryfile")){
+                iTunesDataLibraryFile=line.substring(23);
+            }
+            line=initfileparams.readLine();
+        }
+        initfileparams.close();
+        
+        boolean useiTunesDataLibraryFile=false;
+        if(iTunesDataLibraryFile!=null && !iTunesDataLibraryFile.equals("")){
+            useiTunesDataLibraryFile=true;
+        }
+        
         
         ServerSocket androidConnection=new ServerSocket(9091);
         System.out.println("Listening on port "+androidConnection.getLocalPort()+" at host "+androidConnection.getInetAddress().getHostName());
@@ -58,6 +85,11 @@ public class Desktop_Server {
                     }catch(IOException e){
                         e.printStackTrace();
                     }
+                }
+                
+                //TODO add itunes metadata from its library file to mp3
+                if(useiTunesDataLibraryFile){
+                    
                 }
                 
                 //convert the song to an array of bytes
