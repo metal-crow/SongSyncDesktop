@@ -22,24 +22,7 @@ public class Desktop_Server {
     
     public static void main(String[] args) throws IOException {
         //load params from ini file
-        File inifile=new File("SongSyncInfo.ini");
-        if(!inifile.exists()){
-            System.err.println("Unable to find ini file.");
-            System.exit(0);
-        }
-        BufferedReader initfileparams=new BufferedReader(new FileReader("SongSyncInfo.ini"));
-        String line=initfileparams.readLine();
-        while(line!=null){
-            if(line.toLowerCase().contains("musicdirectorypath")){
-                musicDirectoryPath=line.substring(19);
-            }else if(line.toLowerCase().contains("ffmpegexelocation")){
-                ffmpegEXElocation=line.substring(18);
-            }else if(line.toLowerCase().contains("itunesdatalibraryfile")){
-                iTunesDataLibraryFile=line.substring(22);
-            }
-            line=initfileparams.readLine();
-        }
-        initfileparams.close();
+        loadIniFile();
         
         boolean useiTunesDataLibraryFile=false;
         BufferedReader readituneslibrary = null;
@@ -130,6 +113,31 @@ public class Desktop_Server {
     }
     
     /**
+     * Reads ini file. Exits program if not found.
+     * @throws IOException
+     */
+    private static void loadIniFile() throws IOException {
+        File inifile=new File("SongSyncInfo.ini");
+        if(!inifile.exists()){
+            System.err.println("Unable to find ini file.");
+            System.exit(0);
+        }
+        BufferedReader initfileparams=new BufferedReader(new FileReader("SongSyncInfo.ini"));
+        String line=initfileparams.readLine();
+        while(line!=null){
+            if(line.toLowerCase().contains("musicdirectorypath")){
+                musicDirectoryPath=line.substring(19);
+            }else if(line.toLowerCase().contains("ffmpegexelocation")){
+                ffmpegEXElocation=line.substring(18);
+            }else if(line.toLowerCase().contains("itunesdatalibraryfile")){
+                iTunesDataLibraryFile=line.substring(22);
+            }
+            line=initfileparams.readLine();
+        }
+        initfileparams.close();
+    }
+
+    /**
      * Scan the library for metadata for the requested file, and return an ffmpeg valid string with the data
      * @param song
      * @param readituneslibrary
@@ -187,7 +195,7 @@ public class Desktop_Server {
      * @param metadata 
      * @throws IOException 
      */
-    public static void conversion(String song, String metadata) throws IOException {
+    private static void conversion(String song, String metadata) throws IOException {
         String ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec libmp3lame "+metadata+"-y tempout.mp3";
         Runtime runtime = Runtime.getRuntime();
         runtime.exec(ffmpegcmmd);
@@ -200,7 +208,7 @@ public class Desktop_Server {
      * @param locationpath the path of the current folder (changed for file tree recursion)
      * @param songfilenames a reference to the arraylist of songs
      */
-    public static void generateList(ArrayList<String> songfilenames, String locationpath){
+    private static void generateList(ArrayList<String> songfilenames, String locationpath){
         File folder = new File(locationpath);
         
         for(File f:folder.listFiles()){
