@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -86,14 +87,12 @@ public class Desktop_Server {
                 //write the length to receive
                 out.println(String.valueOf(songinbyte.length));
                     //System.out.println("wrote song legth "+songinbyte.length);
-                    
-                //wait to receive ready confirmation
-                String confirmlength=in.readLine();
-                    //System.out.println(confirmlength);
                 
+                //wait to receive a confirmation phone is ready to receive the song
+                String confirm=in.readLine();
                 
-                //write the bytes to the phone (this is auto split into smaller packets)
-                if(confirmlength.equals("READY")){
+                if(confirm.equals("READY")){
+                    //write the bytes to the phone (this is auto split into smaller packets)
                     pout.write(songinbyte,0,songinbyte.length);
                         System.out.println("Wrote song");
                     pout.flush();
@@ -189,7 +188,7 @@ public class Desktop_Server {
     }
 
     /**
-     * Convert the given audio file into the desired format
+     * Convert the given audio file into the desired format. This method will block until ffmpeg finished converting.
      * TODO allow to choose format
      * @param song the song to be converted
      * @param metadata 
@@ -198,7 +197,16 @@ public class Desktop_Server {
     private static void conversion(String song, String metadata) throws IOException {
         String ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec libmp3lame "+metadata+"-y tempout.mp3";
         Runtime runtime = Runtime.getRuntime();
-        runtime.exec(ffmpegcmmd);
+        Process p=runtime.exec(ffmpegcmmd);
+
+        //we have to wait a few seconds for ffmpeg to finish the conversion
+        //read the command file until we read that it is finished
+        InputStream in = p.getInputStream();
+        int c;
+        while ((c = in.read()) != -1) {
+          System.out.print((char) c);
+        }
+        in.close();
     }
 
     /**
