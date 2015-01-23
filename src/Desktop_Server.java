@@ -11,6 +11,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+
 
 public class Desktop_Server {
     
@@ -29,21 +31,22 @@ public class Desktop_Server {
         String line=initfileparams.readLine();
         while(line!=null){
             if(line.toLowerCase().contains("musicdirectorypath")){
-                musicDirectoryPath=line.substring(20);
+                musicDirectoryPath=line.substring(19);
             }else if(line.toLowerCase().contains("ffmpegexelocation")){
-                ffmpegEXElocation=line.substring(19);
+                ffmpegEXElocation=line.substring(18);
             }else if(line.toLowerCase().contains("itunesdatalibraryfile")){
-                iTunesDataLibraryFile=line.substring(23);
+                iTunesDataLibraryFile=line.substring(22);
             }
             line=initfileparams.readLine();
         }
         initfileparams.close();
         
         boolean useiTunesDataLibraryFile=false;
+        BufferedReader readituneslibrary = null;
         if(iTunesDataLibraryFile!=null && !iTunesDataLibraryFile.equals("")){
             useiTunesDataLibraryFile=true;
+            readituneslibrary=new BufferedReader(new FileReader(iTunesDataLibraryFile));
         }
-        
         
         ServerSocket androidConnection=new ServerSocket(9091);
         System.out.println("Listening on port "+androidConnection.getLocalPort()+" at host "+androidConnection.getInetAddress().getHostName());
@@ -73,28 +76,26 @@ public class Desktop_Server {
             while(request!=null){
                 String songpath=musicDirectoryPath+request;
                     System.out.println("got request for "+request);
-                File song = new File (songpath);
                 
                 //find the songs filetype, and convert it if it needs to be converted
                 String filetype=songpath.substring(songpath.lastIndexOf("."));
                 if(!filetype.equals(".mp3")){
                     try{
-                        conversion(song);
+                        String metadata="";
+                        if(useiTunesDataLibraryFile){
+                            metadata=scanForMetadata(songpath,readituneslibrary);
+                        }
+                        conversion(songpath, metadata);
                         //change the file to point to the converted song
-                        song=new File("tempout.mp3");
+                        songpath="tempout.mp3";
                     }catch(IOException e){
                         e.printStackTrace();
                     }
                 }
                 
-                //TODO add itunes metadata from its library file to mp3
-                if(useiTunesDataLibraryFile){
-                    
-                }
-                
                 //convert the song to an array of bytes
-                byte [] songinbyte  = new byte [(int)song.length()];
-                BufferedInputStream bis = new BufferedInputStream(new FileInputStream(song));
+                byte [] songinbyte  = new byte [(int)(new File(songpath).length())];
+                BufferedInputStream bis = new BufferedInputStream(new FileInputStream(songpath));
                 bis.read(songinbyte,0,songinbyte.length);
                 bis.close();
                     
@@ -120,7 +121,7 @@ public class Desktop_Server {
             out.close();
             in.close();
             pout.close();
-            
+            readituneslibrary.close();            
             phone.close();
             System.out.println("Sync finished");
         }
@@ -129,14 +130,67 @@ public class Desktop_Server {
     }
     
     /**
-     * Convert the given audio file into the desired format
-     * @param song the song to be converted
+     * Scan the library for metadata for the requested file, and return an ffmpeg valid string with the data
+     * @param song
+     * @param readituneslibrary
+     * @return
      * @throws IOException 
      */
-    public static void conversion(File song) throws IOException {
-        String command=ffmpegEXElocation+" -i "+song.getPath()+" -ab 320000 -acodec libmp3lame tempout.mp3";
+    private static String scanForMetadata(String song,BufferedReader readituneslibrary) throws IOException {
+        boolean songfound=false;
+        while(readituneslibrary.ready() && !songfound){
+            String line=readituneslibrary.readLine();
+            //read each segment of data in the library, marking the start.
+            //because we cannot tell at the head of the segment if this is our song, we need ot mark to return if we find it is
+            if(line.contains("<key>Track ID</key>")){
+                readituneslibrary.mark(2000);//this should be enough to cover one header.
+            }
+            else if(line.contains("<key>Location</key>")){
+                //this value will tell us if this header is our song
+                String path=StringEscapeUtils.unescapeXml(line).replaceAll("%20", " ");//replace itunes escape chars
+                if(path.contains(song)){
+                    songfound=true;
+                    readituneslibrary.reset();
+                }
+                                
+            }
+        }
+        //now scan the header for the metadata
+        StringBuilder metadata=new StringBuilder();
+        if(songfound){
+            //i cant do this blind because sometimes a tag isnt there
+            String metadataline="";
+            for(int i=0;i<4;i++){
+                metadataline=StringEscapeUtils.unescapeXml(readituneslibrary.readLine());
+                if(metadataline.contains("Name")){
+                    metadata.append("-metadata title=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>"))+"\" ");
+                }
+                else if(metadataline.contains("Artist")){
+                    metadata.append("-metadata artist=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>"))+"\" ");
+                }
+                else if(metadataline.contains("Album")){
+                    metadata.append("-metadata album=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>"))+"\" ");
+                }
+                else if(metadataline.contains("Genre")){
+                    metadata.append("-metadata genre=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>"))+"\" ");
+                }
+            }
+            
+        }
+        return metadata.toString();
+    }
+
+    /**
+     * Convert the given audio file into the desired format
+     * TODO allow to choose format
+     * @param song the song to be converted
+     * @param metadata 
+     * @throws IOException 
+     */
+    public static void conversion(String song, String metadata) throws IOException {
+        String ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec libmp3lame "+metadata+"-y tempout.mp3";
         Runtime runtime = Runtime.getRuntime();
-        runtime.exec(command);
+        runtime.exec(ffmpegcmmd);
     }
 
     /**
