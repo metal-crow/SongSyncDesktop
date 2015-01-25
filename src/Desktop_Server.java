@@ -3,6 +3,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,6 +12,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
@@ -63,11 +65,11 @@ public class Desktop_Server {
                 
                 //find the songs filetype, and convert it if it needs to be converted
                 String filetype=songpath.substring(songpath.lastIndexOf("."));
-                if(!filetype.equals(".mp3")){
+                if(!filetype.equals(".mp3") || useiTunesDataLibraryFile){
                     try{
                         String metadata="";
                         if(useiTunesDataLibraryFile){
-                            metadata=scanForMetadata(songpath,readituneslibrary);
+                            metadata=scanForitunesMetadata(songpath,readituneslibrary);
                         }
                         conversion(songpath, metadata);
                         //change the file to point to the converted song
@@ -137,14 +139,17 @@ public class Desktop_Server {
     }
 
     /**
-     * Scan the library for metadata for the requested file, and return an ffmpeg valid string with the data
+     * If using the itunes library, every song must have itunes metadata manually added to it because the user may have added metatdata to itunes. Same with album art.
+     * Scan the library for metadata for the requested file, and return an ffmpeg valid string with the data.
+     * Additionally, grab the album art and write it to the local directory as tempalbumart.png
      * @param song
      * @param readituneslibrary
      * @return
      * @throws IOException 
      */
-    private static String scanForMetadata(String song,BufferedReader readituneslibrary) throws IOException {
+    private static String scanForitunesMetadata(String song,BufferedReader readituneslibrary) throws IOException {
         boolean songfound=false;
+        String Library_Persistent_ID="";
         while(readituneslibrary.ready() && !songfound){
             String line=readituneslibrary.readLine();
             //read each segment of data in the library, marking the start.
@@ -158,8 +163,10 @@ public class Desktop_Server {
                 if(path.contains(song)){
                     songfound=true;
                     readituneslibrary.reset();
-                }
-                                
+                }        
+            }
+            else if(line.contains("Library_Persistent_ID")){
+                Library_Persistent_ID=line.substring(line.indexOf("<string>")+8, line.indexOf("</string>"));
             }
         }
         //now scan the header for the metadata
@@ -167,7 +174,8 @@ public class Desktop_Server {
         if(songfound){
             //i cant do this blind because sometimes a tag isnt there
             String metadataline="";
-            for(int i=0;i<4;i++){
+            boolean endofsongmetadata=false;
+            while(!endofsongmetadata){
                 metadataline=StringEscapeUtils.unescapeXml(readituneslibrary.readLine());
                 if(metadataline.contains("Name")){
                     metadata.append("-metadata title=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>"))+"\" ");
@@ -181,26 +189,88 @@ public class Desktop_Server {
                 else if(metadataline.contains("Genre")){
                     metadata.append("-metadata genre=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>"))+"\" ");
                 }
+                else if(metadataline.contains("Persistent ID")){
+                    String albumartlocation=metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>"));
+                    //see http://stackoverflow.com/questions/13795842/linking-itunes-itc2-files-and-ituneslibrary-xml for how i get the path from itunes's proprietary formula.
+                    String firstfolder=Integer.toHexString(Integer.valueOf(albumartlocation.substring(albumartlocation.length())));
+                    String secondfolder=Integer.toHexString(Integer.valueOf(albumartlocation.substring(albumartlocation.length()-1,albumartlocation.length())));
+                    String thirdfolder=Integer.toHexString(Integer.valueOf(albumartlocation.substring(albumartlocation.length()-2,albumartlocation.length()-1)));
+                    
+                    File pathtToITC2ArtFile=new File(musicDirectoryPath+"/Album Artwork/Cache/"+Library_Persistent_ID+"/"+firstfolder+"/"+secondfolder+"/"+thirdfolder);
+                    //make sure that the path and ITC2 file exists
+                    if(pathtToITC2ArtFile.exists() && pathtToITC2ArtFile.list().length!=0){
+                        extractPNGfromITC2(new FileInputStream(pathtToITC2ArtFile.list()[0]));
+                    }else{
+                        System.err.println("Error, unable to find album artwork or a parent folder of the artwork.");
+                    }
+                    
+                }
+                else if(metadataline.contains("Location")){
+                    endofsongmetadata=true;
+                }
             }
             
         }
         return metadata.toString();
     }
+    
+    /**
+     * Decypher the ITC2 file, graph the png album art from it, and write it to the local directory as tempalbumart.png
+     * See http://nada-labs.net/2010/file-format-reverse-engineering-an-introduction/comment-page-1/
+     * @param in
+     * @throws IOException
+     */
+    private static void extractPNGfromITC2(FileInputStream in) throws IOException{
+        FileOutputStream out=new FileOutputStream("tempalbumart.png");
+        boolean writeout=false;
+        int headersfound=0;
+        int c;
+        byte[] bufferforcheck=new byte[8];
+        byte[] headerstart={(byte)0,(byte)0,(byte)0,(byte)100,(byte)97,(byte)116,(byte)97,(byte)137};//the png header. The last byte is the real png starting byte
+        byte[] pngend={(byte)69,(byte)78,(byte)68,(byte)174,(byte)66,(byte)96,(byte)130,(byte)0};//the end of the png file
+        
+        while ((c = in.read()) != -1) {
+            //shift the buffer 1 byte left
+            for(int i=1;i<8;i++){
+                bufferforcheck[i-1]=bufferforcheck[i];
+            }
+            //append new byte to end of the buffer
+            bufferforcheck[7]=(byte)c;
+            
+            //check the buffer if it matches the header
+            if(Arrays.equals(bufferforcheck, headerstart)){
+                writeout=true;
+                headersfound++;
+            }
+            //check the buffer if it matched the end of the png file
+            else if(Arrays.equals(bufferforcheck, pngend)){
+                writeout=false;
+            }
+            //for pngs the 3rd png header indicates the largest sized png
+            if(writeout && headersfound==3){
+                out.write(c);
+            }
+        }
+        out.close();
+    }
 
     /**
      * Convert the given audio file into the desired format. This method will block until ffmpeg finished converting.
+     * Also add the metadata and album art if available
      * TODO allow to choose format
      * @param song the song to be converted
      * @param metadata 
      * @throws IOException 
      */
     private static void conversion(String song, String metadata) throws IOException {
+        //TODO always delete the album art png after finished converting to prevent another song from accidentally having the wrong album art applied to it
         String ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec libmp3lame "+metadata+"-y tempout.mp3";
         Runtime runtime = Runtime.getRuntime();
         Process p=runtime.exec(ffmpegcmmd);
 
         //we have to wait a few seconds for ffmpeg to finish the conversion
         //read the command file until we read that it is finished
+        //FIXME this is an ugly patch job, but it works. When we read no more text the process is finished. 
         InputStream in = p.getInputStream();
         int c;
         while ((c = in.read()) != -1) {
