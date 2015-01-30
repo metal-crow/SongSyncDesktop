@@ -3,7 +3,6 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,9 +11,6 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
-
-import org.apache.commons.lang3.StringEscapeUtils;
 
 
 public class Desktop_Server {
@@ -65,6 +61,7 @@ public class Desktop_Server {
                 
                 //find the songs filetype, and convert it if it needs to be converted
                 String filetype=songpath.substring(songpath.lastIndexOf("."));
+                //if we're using iTunes we always need to remux to add iTunes metadata and art
                 if(!filetype.equals(".mp3") || useiTunesDataLibraryFile){
                     try{
                         String metadata="";
@@ -101,16 +98,16 @@ public class Desktop_Server {
                 }
                     
                 request=in.readLine();
-                break;
             }
             out.close();
             in.close();
-            pout.close();
-            readituneslibrary.close();            
+            pout.close();       
             phone.close();
             System.out.println("Sync finished");
         }
 
+
+        //readituneslibrary.close();     
         //androidConnection.close();
     }
     
@@ -143,26 +140,28 @@ public class Desktop_Server {
      * Convert the given audio file into the desired format. This method will block until ffmpeg finished converting.
      * Also add the metadata and album art if available
      * TODO allow to choose format
+     * TODO this can be optimized for various scenarios. Not doing that right now.
      * @param song the song to be converted
      * @param metadata 
      * @throws IOException 
      */
     private static void conversion(String song, String metadata) throws IOException {
-        //convert the file to mp3 and add metadata + TODO keep existing metadata and preserving artwork
-        String ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec libmp3lame "+metadata+"-y tempout.mp3";
+        //convert the file to mp3 and add metadata + keep existing metadata and preserving artwork
+        String ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec libmp3lame -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout.mp3";
         Runtime runtime = Runtime.getRuntime();
         Process p=runtime.exec(ffmpegcmmd);
 
-        System.out.println("--------------metatdata & mp3--------------");
         wait_for_ffmpeg(p);
         
         //add the album art if it exists to the converted file
+        //NOTE: apparently itunes does embed the artwork into the songs, but windows cant read it. So this may be unnecessary, as the artwork should already be in the file.
+        //however, i have not 100% confirmed this.
         File albumArt=new File("tempalbumart.png");
+        
         if(albumArt.exists() && albumArt.isFile()){
             String ffmpegAddArt=ffmpegEXElocation+" -i tempout.mp3 -i tempalbumart.png -map 0:0 -map 1:0 -c copy -id3v2_version 3 -y tempout2.mp3";
             p=runtime.exec(ffmpegAddArt);
             
-            System.out.println("--------------artwork--------------");
             wait_for_ffmpeg(p);
             
             //since we copied to a buffer file, delete original and rename buffer
@@ -176,7 +175,7 @@ public class Desktop_Server {
     /**
      * we have to wait a few seconds for ffmpeg to finish the conversion
      * read the command file until we read that it is finished
-     * FIXME this is an ugly patch job, but it works. When we read no more text the process is finished. 
+     * FIXME this is an ugly patch job, but it works. When we read no more text the process is finished. Can use p.waitFor()
      */
     private static void wait_for_ffmpeg(Process p) throws IOException{
         InputStream in = p.getErrorStream();
