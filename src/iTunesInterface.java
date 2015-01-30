@@ -16,10 +16,11 @@ public class iTunesInterface {
      * Additionally, grab the album art and write it to the local directory as tempalbumart.png
      * @param song
      * @param readituneslibrary
+     * @param musicDirectoryPath 
      * @return
      * @throws IOException 
      */
-    public static String scanForitunesMetadata(String song,BufferedReader readituneslibrary) throws IOException {
+    public static String scanForitunesMetadata(String song,BufferedReader readituneslibrary, String musicDirectoryPath) throws IOException {
         boolean songfound=false;
         String Library_Persistent_ID="";
         while(readituneslibrary.ready() && !songfound){
@@ -70,7 +71,6 @@ public class iTunesInterface {
                     String secondfolder=String.format("%02d", Integer.parseInt(albumartlocation.substring(albumartlocation.length()-2,albumartlocation.length()-1),16));
                     String thirdfolder=String.format("%02d", Integer.parseInt(albumartlocation.substring(albumartlocation.length()-3,albumartlocation.length()-2),16));
                     
-                    String musicDirectoryPath="E:/iTunes";//XXX
                     File pathtToITC2ArtFile=new File(musicDirectoryPath+"/Album Artwork/Cache/"+Library_Persistent_ID+"/"+firstfolder+"/"+secondfolder+"/"+thirdfolder);
 
                     //make sure that the path and ITC2 file exists
