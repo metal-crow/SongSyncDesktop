@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -24,10 +25,10 @@ public class Desktop_Server {
         loadIniFile();
         
         boolean useiTunesDataLibraryFile=false;
-        BufferedReader readituneslibrary = null;
+        RandomAccessFile readituneslibrary = null;
         if(iTunesDataLibraryFile!=null && !iTunesDataLibraryFile.equals("")){
             useiTunesDataLibraryFile=true;
-            readituneslibrary=new BufferedReader(new FileReader(iTunesDataLibraryFile));
+            readituneslibrary=new RandomAccessFile(iTunesDataLibraryFile, "r");
         }
         
         ServerSocket androidConnection=new ServerSocket(9091);
@@ -99,6 +100,10 @@ public class Desktop_Server {
                     
                 request=in.readLine();
             }
+            
+            //send over the playlists
+            
+            
             out.close();
             in.close();
             pout.close();       

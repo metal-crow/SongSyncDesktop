@@ -22,10 +22,10 @@ Just copy over the entire filestructure directly, so we dont worry about metadat
 TODO  
 add itunes library info to mp3 tags before sending[X]  
 add itunes album art to mp3[x]  
+send over playlists[ ]  
 choose what to convert song to[ ]  
 handle sending music over direct usb link[ ]  
 ability to pass info about what music to delete from phone to computer[ ]  
-send over playlists[ ]  
 Test what happens if song is dropped, fix it[ ]  
   
 USING:  
