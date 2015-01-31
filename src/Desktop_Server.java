@@ -13,6 +13,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import org.javatuples.Pair;
+
 
 public class Desktop_Server {
     
@@ -56,7 +58,7 @@ public class Desktop_Server {
             BufferedOutputStream pout=new BufferedOutputStream(phone.getOutputStream());
             
             String request=in.readLine();
-            while(request!=null){
+            while(request!=null && !request.equals("END OF SONG DOWNLOADS")){
                 String songpath=musicDirectoryPath+request;
                 System.out.println("got request for "+request);
                 
@@ -102,7 +104,22 @@ public class Desktop_Server {
             }
             
             //send over the playlists
-            
+            /* Sending Protocol:
+             * "NEW LIST" (except for 1st sent list)
+             * playlist name
+             * all songs
+             * repeat
+             * "NO MORE PLAYLISTS"
+             */
+            ArrayList<Pair<String, ArrayList<String>>> playlists=iTunesInterface.generateM3UPlaylists(readituneslibrary);
+            for(Pair<String,ArrayList<String>> playlist:playlists){
+                out.println(playlist.getValue0());
+                for(String song:playlist.getValue1()){
+                    out.println(song);
+                }
+                out.println("NEW LIST");
+            }
+            out.println("NO MORE PLAYLISTS");
             
             out.close();
             in.close();
@@ -186,7 +203,7 @@ public class Desktop_Server {
         InputStream in = p.getErrorStream();
         int c;
         while ((c = in.read()) != -1) {
-          System.out.print((char) c);
+          //System.out.print((char) c);
         }
         in.close();
     }

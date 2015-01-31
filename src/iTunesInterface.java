@@ -23,6 +23,7 @@ public class iTunesInterface {
      * @throws IOException 
      */
     public static String scanForitunesMetadata(String song,RandomAccessFile readituneslibrary, String musicDirectoryPath) throws IOException {
+        readituneslibrary.seek(0);
         boolean songfound=false;
         String Library_Persistent_ID="";
         long markpos = -1;
