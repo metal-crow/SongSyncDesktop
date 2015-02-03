@@ -3,6 +3,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,16 +22,28 @@ public class Desktop_Server {
     private static String musicDirectoryPath;
     private static String ffmpegEXElocation;
     private static String iTunesDataLibraryFile;
+    private static String convertMusicTo;
+    private static String ffmpegCommand;
     
     public static void main(String[] args) throws IOException {
         //load params from ini file
-        loadIniFile();
+        try {
+            loadIniFile();
+        } catch (IOException e1) {
+            System.err.println("Ini file is invalid or does not exist.");
+            System.exit(0);
+        }
         
         boolean useiTunesDataLibraryFile=false;
         RandomAccessFile readituneslibrary = null;
         if(iTunesDataLibraryFile!=null && !iTunesDataLibraryFile.equals("")){
             useiTunesDataLibraryFile=true;
-            readituneslibrary=new RandomAccessFile(iTunesDataLibraryFile, "r");
+            try{
+                readituneslibrary=new RandomAccessFile(iTunesDataLibraryFile, "r");
+            }catch(FileNotFoundException e){
+                System.err.println("Invalid iTunes library location");
+                System.exit(0);
+            }
         }
         
         ServerSocket androidConnection=new ServerSocket(9091);
@@ -47,6 +60,10 @@ public class Desktop_Server {
             
             //write the current song list to the phone
             PrintWriter out=new PrintWriter(phone.getOutputStream(), true);
+
+            //write the filetype of the songs
+            out.println(convertMusicTo);
+            
             for(String song:songs){
                 out.println(song);
             }
@@ -65,18 +82,23 @@ public class Desktop_Server {
                 //find the songs filetype, and convert it if it needs to be converted
                 String filetype=songpath.substring(songpath.lastIndexOf("."));
                 //if we're using iTunes we always need to remux to add iTunes metadata and art
-                if(!filetype.equals(".mp3") || useiTunesDataLibraryFile){
-                    try{
+                if(!filetype.equals(convertMusicTo) || useiTunesDataLibraryFile){
                         String metadata="";
                         if(useiTunesDataLibraryFile){
                             metadata=iTunesInterface.scanForitunesMetadata(request,readituneslibrary,musicDirectoryPath);
                         }
-                        conversion(songpath, metadata);
+                        try {
+                            conversion(songpath, metadata);
+                        } catch (IOException e) {
+                            System.err.println("FFmpeg command is invalid/malformed. Aborting sync.");
+                            out.close();
+                            in.close();
+                            pout.close();       
+                            phone.close();
+                            System.exit(0);
+                        }
                         //change the file to point to the converted song
                         songpath="tempout.mp3";
-                    }catch(IOException e){
-                        e.printStackTrace();
-                    }
                 }
                 
                 //convert the song to an array of bytes
@@ -146,12 +168,18 @@ public class Desktop_Server {
         BufferedReader initfileparams=new BufferedReader(new FileReader("SongSyncInfo.ini"));
         String line=initfileparams.readLine();
         while(line!=null){
-            if(line.toLowerCase().contains("musicdirectorypath")){
-                musicDirectoryPath=line.substring(19);
-            }else if(line.toLowerCase().contains("ffmpegexelocation")){
-                ffmpegEXElocation=line.substring(18);
-            }else if(line.toLowerCase().contains("itunesdatalibraryfile")){
-                iTunesDataLibraryFile=line.substring(22);
+            if(!line.contains("#")){
+                if(line.toLowerCase().contains("musicdirectorypath")){
+                    musicDirectoryPath=line.substring(19);
+                }else if(line.toLowerCase().contains("ffmpegexelocation")){
+                    ffmpegEXElocation=line.substring(18);
+                }else if(line.toLowerCase().contains("itunesdatalibraryfile")){
+                    iTunesDataLibraryFile=line.substring(22);
+                }else if(line.toLowerCase().contains("convertsongsto")){
+                    convertMusicTo=line.substring(15);
+                }else if(line.toLowerCase().contains("ffmpegcommand") && line.substring(14).length()>1){
+                    ffmpegCommand=line.substring(14);
+                }
             }
             line=initfileparams.readLine();
         }
@@ -161,19 +189,26 @@ public class Desktop_Server {
     /**
      * Convert the given audio file into the desired format. This method will block until ffmpeg finished converting.
      * Also add the metadata and album art if available
-     * TODO allow to choose format
      * TODO this can be optimized for various scenarios. Not doing that right now.
      * @param song the song to be converted
      * @param metadata 
      * @throws IOException 
      */
     private static void conversion(String song, String metadata) throws IOException {
-        //convert the file to mp3 and add metadata + keep existing metadata and preserving artwork
-        String ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec libmp3lame -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout.mp3";
+        //convert the file and add metadata + keep existing metadata and preserving artwork
+        //TODO need to change conversion codec based on the chosen file extension
+        String ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec libmp3lame -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
+        if(ffmpegCommand!=null){
+            ffmpegcmmd=ffmpegEXElocation+" "+ffmpegCommand;
+        }
         Runtime runtime = Runtime.getRuntime();
         Process p=runtime.exec(ffmpegcmmd);
 
         wait_for_ffmpeg(p);
+        //p.waitFor();
+        if(p.exitValue()!=0){
+            throw new IOException("");
+        }
         
         //add the album art if it exists to the converted file
         //NOTE: apparently itunes does embed the artwork into the songs, but windows cant read it. So this may be unnecessary, as the artwork should already be in the file.
@@ -181,15 +216,18 @@ public class Desktop_Server {
         File albumArt=new File("tempalbumart.png");
         
         if(albumArt.exists() && albumArt.isFile()){
-            String ffmpegAddArt=ffmpegEXElocation+" -i tempout.mp3 -i tempalbumart.png -map 0:0 -map 1:0 -c copy -id3v2_version 3 -y tempout2.mp3";
+            String ffmpegAddArt=ffmpegEXElocation+" -i tempout"+convertMusicTo+" -i tempalbumart.png -map 0:0 -map 1:0 -c copy -id3v2_version 3 -y tempout2"+convertMusicTo;
             p=runtime.exec(ffmpegAddArt);
             
             wait_for_ffmpeg(p);
+            if(p.exitValue()!=0){
+                throw new IOException("");
+            }
             
             //since we copied to a buffer file, delete original and rename buffer
-            File orig=new File("tempout.mp3");
+            File orig=new File("tempout"+convertMusicTo);
             orig.delete();
-            new File("tempout2.mp3").renameTo(orig);
+            new File("tempout2"+convertMusicTo).renameTo(orig);
         }
         albumArt.delete();
     }
