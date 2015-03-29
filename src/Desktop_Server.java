@@ -196,7 +196,7 @@ public class Desktop_Server {
      * @throws IOException 
      */
     private static void conversion(String song, String metadata) throws IOException {
-        //convert the file and add metadata + keep existing metadata and preserving artwork
+        //convert the file and add metadata + keep existing metadata and trying to preserving artwork
         //TODO need to change conversion codec based on the chosen file extension
         String ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec libmp3lame -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
         if(ffmpegCommand!=null){
@@ -208,28 +208,38 @@ public class Desktop_Server {
         wait_for_ffmpeg(p);
         //p.waitFor();
         if(p.exitValue()!=0){
-            throw new IOException("");
+            throw new IOException("Failure in adding metadata");
         }
         
-        //add the album art if it exists to the converted file
-        //NOTE: apparently itunes does embed the artwork into the songs, but windows cant read it. So this may be unnecessary, as the artwork should already be in the file.
-        //however, i have not 100% confirmed this.
+        //add the album art to the converted file
+        //NOTE: after various testing, any number of errors can occur in keeping the art. Additionally, i dont know how iTunes handles album art changes.
+        //Therefore, im just always going to extract art to add, instead of sometimes relying on ffmpeg to keep it. 
         File albumArt=new File("tempalbumart.png");
         
-        if(albumArt.exists() && albumArt.isFile() && albumArt.length()>0){
-            String ffmpegAddArt=ffmpegEXElocation+" -i tempout"+convertMusicTo+" -i tempalbumart.png -map 0:0 -map 1:0 -c copy -id3v2_version 3 -y tempout2"+convertMusicTo;
-            p=runtime.exec(ffmpegAddArt);
-            
+        //if we didnt pull the album art from itunes, we need to ensure that we correctly add album art.
+        //ffmpeg will sometimes throw errors and not include the album art if the embedded art is incorrectly formatted
+        if(!(albumArt.exists() && albumArt.isFile() && albumArt.length()>0)){
+            //extract the art from the original file
+            String ffmpegArtExtract=ffmpegEXElocation+" -i \""+song+"\" -an -vcodec copy tempalbumart.png";
+            p=runtime.exec(ffmpegArtExtract);
             wait_for_ffmpeg(p);
             if(p.exitValue()!=0){
-                throw new IOException("");
+                throw new IOException("Failure in extracting album art");
             }
-            
-            //since we copied to a buffer file, delete original and rename buffer
-            File orig=new File("tempout"+convertMusicTo);
-            orig.delete();
-            new File("tempout2"+convertMusicTo).renameTo(orig);
         }
+         
+        String ffmpegAddArt=ffmpegEXElocation+" -i tempout"+convertMusicTo+" -i tempalbumart.png -map 0:0 -map 1:0 -c copy -id3v2_version 3 -y tempout2"+convertMusicTo;
+        p=runtime.exec(ffmpegAddArt);
+        
+        wait_for_ffmpeg(p);
+        if(p.exitValue()!=0){
+            throw new IOException("Failure in adding album art");
+        }
+        
+        //since we copied to a buffer file, delete original and rename buffer
+        File orig=new File("tempout"+convertMusicTo);
+        orig.delete();
+        new File("tempout2"+convertMusicTo).renameTo(orig);
         albumArt.delete();
     }
     
