@@ -86,7 +86,7 @@ public class Desktop_Server {
                 if(!filetype.equals(convertMusicTo) || useiTunesDataLibraryFile){
                         String metadata="";
                         if(useiTunesDataLibraryFile){
-                            metadata=iTunesInterface.scanForitunesMetadata(request,readituneslibrary,musicDirectoryPath);
+                            metadata=iTunesInterface.scanForitunesMetadata(request,readituneslibrary,iTunesDataLibraryFile);
                         }
                         try {
                             conversion(songpath, metadata);

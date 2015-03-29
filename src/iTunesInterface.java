@@ -18,11 +18,11 @@ public class iTunesInterface {
      * Additionally, grab the album art and write it to the local directory as tempalbumart.png
      * @param song
      * @param readituneslibrary
-     * @param musicDirectoryPath 
+     * @param iTunesDataLibraryFile 
      * @return
      * @throws IOException 
      */
-    public static String scanForitunesMetadata(String song,RandomAccessFile readituneslibrary, String musicDirectoryPath) throws IOException {
+    public static String scanForitunesMetadata(String song,RandomAccessFile readituneslibrary, String iTunesDataLibraryFile) throws IOException {
         readituneslibrary.seek(0);
         boolean songfound=false;
         String Library_Persistent_ID="";
@@ -77,14 +77,12 @@ public class iTunesInterface {
                     String secondfolder=String.format("%02d", Integer.parseInt(albumartlocation.substring(albumartlocation.length()-2,albumartlocation.length()-1),16));
                     String thirdfolder=String.format("%02d", Integer.parseInt(albumartlocation.substring(albumartlocation.length()-3,albumartlocation.length()-2),16));
                     
-                    File pathtToITC2ArtFile=new File(musicDirectoryPath+"/Album Artwork/Cache/"+Library_Persistent_ID+"/"+firstfolder+"/"+secondfolder+"/"+thirdfolder);
+                    File pathtToITC2ArtFile=new File(iTunesDataLibraryFile.substring(0, iTunesDataLibraryFile.lastIndexOf('/'))+"/Album Artwork/Cache/"+Library_Persistent_ID+"/"+firstfolder+"/"+secondfolder+"/"+thirdfolder);
 
                     //make sure that the path and ITC2 file exists
                     if(pathtToITC2ArtFile.exists() && pathtToITC2ArtFile.list().length!=0){
-                        System.out.println("Found art");
+                        System.out.println("Found iTunes art");
                         extractPNGfromITC2(new FileInputStream(pathtToITC2ArtFile.getPath()+"/"+pathtToITC2ArtFile.list()[0]));
-                    }else{
-                        System.err.println("Error, unable to find album artwork or a parent folder of the artwork.");
                     }
                     
                 }
@@ -178,6 +176,8 @@ public class iTunesInterface {
         return Array_of_List_Of_Playlists;
     }
     
+    private static final byte[] headerstart={(byte)0,(byte)0,(byte)0,(byte)100,(byte)97,(byte)116,(byte)97,(byte)137};//the png header. The last byte is the real png starting byte
+    private static final byte[] pngend={(byte)69,(byte)78,(byte)68,(byte)174,(byte)66,(byte)96,(byte)130,(byte)0};//the end of the png file
     /**
      * Decypher the ITC2 file, graph the png album art from it, and write it to the local directory as tempalbumart.png
      * See http://nada-labs.net/2010/file-format-reverse-engineering-an-introduction/comment-page-1/
@@ -190,8 +190,6 @@ public class iTunesInterface {
         int headersfound=0;
         int c;
         byte[] bufferforcheck=new byte[8];
-        byte[] headerstart={(byte)0,(byte)0,(byte)0,(byte)100,(byte)97,(byte)116,(byte)97,(byte)137};//the png header. The last byte is the real png starting byte
-        byte[] pngend={(byte)69,(byte)78,(byte)68,(byte)174,(byte)66,(byte)96,(byte)130,(byte)0};//the end of the png file
         
         while ((c = in.read()) != -1) {
             //shift the buffer 1 byte left
