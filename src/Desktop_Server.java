@@ -216,7 +216,7 @@ public class Desktop_Server {
         //however, i have not 100% confirmed this.
         File albumArt=new File("tempalbumart.png");
         
-        if(albumArt.exists() && albumArt.isFile()){
+        if(albumArt.exists() && albumArt.isFile() && albumArt.length()>0){
             String ffmpegAddArt=ffmpegEXElocation+" -i tempout"+convertMusicTo+" -i tempalbumart.png -map 0:0 -map 1:0 -c copy -id3v2_version 3 -y tempout2"+convertMusicTo;
             p=runtime.exec(ffmpegAddArt);
             
