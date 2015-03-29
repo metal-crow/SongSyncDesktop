@@ -72,7 +72,7 @@ public class Desktop_Server {
             out.println("ENDOFLIST");
             
             //recieve the request list from the phone and send over each song per request
-            BufferedReader in=new BufferedReader(new InputStreamReader(phone.getInputStream()));
+            BufferedReader in=new BufferedReader(new InputStreamReader(phone.getInputStream(), "utf-8"));
             BufferedOutputStream pout=new BufferedOutputStream(phone.getOutputStream());
             
             String request=in.readLine();
