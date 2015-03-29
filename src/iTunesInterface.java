@@ -27,9 +27,8 @@ public class iTunesInterface {
         boolean songfound=false;
         String Library_Persistent_ID="";
         long markpos = -1;
-        String line = "";
+        String line = readituneslibrary.readLine();
         while(!songfound && line!=null){
-            line=readituneslibrary.readLine();
             //read each segment of data in the library, marking the start.
             //because we cannot tell at the head of the segment if this is our song, we need to mark to return if we find it is
             if(line.contains("<key>Track ID</key>")){
@@ -47,6 +46,7 @@ public class iTunesInterface {
             if(line.contains("<key>Library Persistent ID</key>")){
                 Library_Persistent_ID=line.substring(line.indexOf("<string>")+8, line.indexOf("</string>"));
             }
+            line=readituneslibrary.readLine();
         }
         
         //now scan the header for the metadata
