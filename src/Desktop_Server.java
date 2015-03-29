@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.net.ServerSocket;
@@ -59,7 +60,7 @@ public class Desktop_Server {
             generateList(songs, musicDirectoryPath);
             
             //write the current song list to the phone
-            PrintWriter out=new PrintWriter(phone.getOutputStream(), true);
+            PrintWriter out=new PrintWriter(new OutputStreamWriter(phone.getOutputStream(), "utf-8"), true);
 
             //write the filetype of the songs
             out.println(convertMusicTo);
