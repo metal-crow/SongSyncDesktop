@@ -185,7 +185,7 @@ public class iTunesInterface {
      * @throws IOException
      */
     private static void extractPNGfromITC2(FileInputStream in) throws IOException{
-        FileOutputStream out=new FileOutputStream("tempalbumart.png");
+        FileOutputStream out=new FileOutputStream("tempalbumart.jpg");
         boolean writeout=false;
         int headersfound=0;
         int c;

@@ -25,6 +25,7 @@ public class Desktop_Server {
     private static String iTunesDataLibraryFile;
     private static String convertMusicTo;
     private static String ffmpegCommand;
+    private static final boolean debugFFmpeg=false;
     
     public static void main(String[] args) throws IOException {
         //load params from ini file
@@ -91,7 +92,7 @@ public class Desktop_Server {
                         try {
                             conversion(songpath, metadata);
                         } catch (IOException e) {
-                            System.err.println("FFmpeg command is invalid/malformed. Aborting sync.");
+                            System.err.println(e.getMessage()+". Aborting sync.");
                             out.close();
                             in.close();
                             pout.close();       
@@ -214,13 +215,13 @@ public class Desktop_Server {
         //add the album art to the converted file
         //NOTE: after various testing, any number of errors can occur in keeping the art. Additionally, i dont know how iTunes handles album art changes.
         //Therefore, im just always going to extract art to add, instead of sometimes relying on ffmpeg to keep it. 
-        File albumArt=new File("tempalbumart.png");
+        File albumArt=new File("tempalbumart.jpg");
         
         //if we didnt pull the album art from itunes, we need to ensure that we correctly add album art.
         //ffmpeg will sometimes throw errors and not include the album art if the embedded art is incorrectly formatted
         if(!(albumArt.exists() && albumArt.isFile() && albumArt.length()>0)){
             //extract the art from the original file
-            String ffmpegArtExtract=ffmpegEXElocation+" -i \""+song+"\" -an -vcodec copy tempalbumart.png";
+            String ffmpegArtExtract=ffmpegEXElocation+" -i \""+song+"\" -an -vcodec copy tempalbumart.jpg";
             p=runtime.exec(ffmpegArtExtract);
             wait_for_ffmpeg(p);
             if(p.exitValue()!=0){
@@ -228,7 +229,7 @@ public class Desktop_Server {
             }
         }
          
-        String ffmpegAddArt=ffmpegEXElocation+" -i tempout"+convertMusicTo+" -i tempalbumart.png -map 0:0 -map 1:0 -c copy -id3v2_version 3 -y tempout2"+convertMusicTo;
+        String ffmpegAddArt=ffmpegEXElocation+" -i tempout"+convertMusicTo+" -i tempalbumart.jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 -y tempout2"+convertMusicTo;
         p=runtime.exec(ffmpegAddArt);
         
         wait_for_ffmpeg(p);
@@ -252,7 +253,9 @@ public class Desktop_Server {
         InputStream in = p.getErrorStream();
         int c;
         while ((c = in.read()) != -1) {
-          //System.out.print((char) c);
+          if(debugFFmpeg){
+              System.out.print((char) c);
+          }
         }
         in.close();
     }
