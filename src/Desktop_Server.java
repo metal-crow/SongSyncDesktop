@@ -224,24 +224,27 @@ public class Desktop_Server {
             String ffmpegArtExtract=ffmpegEXElocation+" -i \""+song+"\" -an -vcodec copy -y tempalbumart.jpg";
             p=runtime.exec(ffmpegArtExtract);
             wait_for_ffmpeg(p);
-            if(p.exitValue()!=0){
+            if(p.exitValue()!=0 && p.exitValue()!=1){
                 throw new IOException("Failure in extracting album art");
             }
         }
          
-        String ffmpegAddArt=ffmpegEXElocation+" -i tempout"+convertMusicTo+" -i tempalbumart.jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 -y tempout2"+convertMusicTo;
-        p=runtime.exec(ffmpegAddArt);
-        
-        wait_for_ffmpeg(p);
-        if(p.exitValue()!=0){
-            throw new IOException("Failure in adding album art");
+        //if the song have album art, if not, just skip this
+        if(albumArt.exists() && albumArt.isFile() && albumArt.length()>0){
+            String ffmpegAddArt=ffmpegEXElocation+" -i tempout"+convertMusicTo+" -i tempalbumart.jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 -y tempout2"+convertMusicTo;
+            p=runtime.exec(ffmpegAddArt);
+            
+            wait_for_ffmpeg(p);
+            if(p.exitValue()!=0){
+                throw new IOException("Failure in adding album art");
+            }
+            
+            //since we copied to a buffer file, delete original and rename buffer
+            File orig=new File("tempout"+convertMusicTo);
+            orig.delete();
+            new File("tempout2"+convertMusicTo).renameTo(orig);
+            albumArt.delete();
         }
-        
-        //since we copied to a buffer file, delete original and rename buffer
-        File orig=new File("tempout"+convertMusicTo);
-        orig.delete();
-        new File("tempout2"+convertMusicTo).renameTo(orig);
-        albumArt.delete();
     }
     
     /**
