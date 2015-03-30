@@ -221,7 +221,7 @@ public class Desktop_Server {
         //ffmpeg will sometimes throw errors and not include the album art if the embedded art is incorrectly formatted
         if(!(albumArt.exists() && albumArt.isFile() && albumArt.length()>0)){
             //extract the art from the original file
-            String ffmpegArtExtract=ffmpegEXElocation+" -i \""+song+"\" -an -vcodec copy tempalbumart.jpg";
+            String ffmpegArtExtract=ffmpegEXElocation+" -i \""+song+"\" -an -vcodec copy -y tempalbumart.jpg";
             p=runtime.exec(ffmpegArtExtract);
             wait_for_ffmpeg(p);
             if(p.exitValue()!=0){
