@@ -1,21 +1,11 @@
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.io.RandomAccessFile;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
-
-import org.javatuples.Pair;
 
 
 public class Desktop_Server {
@@ -26,6 +16,7 @@ public class Desktop_Server {
     private static String convertMusicTo;
     private static String ffmpegCommand;
     private static final boolean debugFFmpeg=false;
+    public volatile static boolean listen=true;
     
     public static void main(String[] args) throws IOException {
         //load params from ini file
@@ -36,6 +27,7 @@ public class Desktop_Server {
             System.exit(0);
         }
         
+        //open itunes reader if ini file has it
         boolean useiTunesDataLibraryFile=false;
         RandomAccessFile readituneslibrary = null;
         if(iTunesDataLibraryFile!=null && !iTunesDataLibraryFile.equals("")){
@@ -48,113 +40,13 @@ public class Desktop_Server {
             }
         }
         
-        ServerSocket androidConnection=new ServerSocket(9091);
-        System.out.println("Listening on port "+androidConnection.getLocalPort()+" at host "+androidConnection.getInetAddress().getHostName());
+        //start wifi connection listener thread
+        Wifi_Thread wifi=new Wifi_Thread(musicDirectoryPath, convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile);
+        wifi.start();
+        //start usb connection listener thread
         
-        //loop and listen for connection
-        while(true){
-            Socket phone = androidConnection.accept();
-            System.out.println("Connection get!");
-            
-            //generate the list of all songs
-            ArrayList<String> songs=new ArrayList<String>();
-            generateList(songs, musicDirectoryPath);
-            
-            //write the current song list to the phone
-            PrintWriter out=new PrintWriter(new OutputStreamWriter(phone.getOutputStream(), "utf-8"), true);
-
-            //write the filetype of the songs
-            out.println(convertMusicTo);
-            
-            for(String song:songs){
-                out.println(song);
-            }
-            //tell phone it is done writing song list
-            out.println("ENDOFLIST");
-            
-            //recieve the request list from the phone and send over each song per request
-            BufferedReader in=new BufferedReader(new InputStreamReader(phone.getInputStream(), "utf-8"));
-            BufferedOutputStream pout=new BufferedOutputStream(phone.getOutputStream());
-            
-            String request=in.readLine();
-            while(request!=null && !request.equals("END OF SONG DOWNLOADS")){
-                String songpath=musicDirectoryPath+request;
-                System.out.println("got request for "+request);
-                
-                //find the songs filetype, and convert it if it needs to be converted
-                String filetype=songpath.substring(songpath.lastIndexOf("."));
-                //if we're using iTunes we always need to remux to add iTunes metadata and art
-                if(!filetype.equals(convertMusicTo) || useiTunesDataLibraryFile){
-                        String metadata="";
-                        if(useiTunesDataLibraryFile){
-                            metadata=iTunesInterface.scanForitunesMetadata(request,readituneslibrary,iTunesDataLibraryFile);
-                        }
-                        try {
-                            conversion(songpath, metadata);
-                        } catch (IOException e) {
-                            System.err.println(e.getMessage()+". Aborting sync.");
-                            out.close();
-                            in.close();
-                            pout.close();       
-                            phone.close();
-                            System.exit(0);
-                        }
-                        //change the file to point to the converted song
-                        songpath="tempout.mp3";
-                }
-                
-                //convert the song to an array of bytes
-                byte [] songinbyte  = new byte [(int)(new File(songpath).length())];
-                BufferedInputStream bis = new BufferedInputStream(new FileInputStream(songpath));
-                bis.read(songinbyte,0,songinbyte.length);
-                bis.close();
-                    
-                //TODO retry sending the song if we do not receive confirmation for both receive song length and song
-                //write the length to receive
-                out.println(String.valueOf(songinbyte.length));
-                    //System.out.println("wrote song legth "+songinbyte.length);
-                
-                //wait to receive a confirmation phone is ready to receive the song
-                String confirm=in.readLine();
-                
-                if(confirm.equals("READY")){
-                    //write the bytes to the phone (this is auto split into smaller packets)
-                    pout.write(songinbyte,0,songinbyte.length);
-                        System.out.println("Wrote song");
-                    pout.flush();
-                }
-                    
-                request=in.readLine();
-            }
-            
-            //send over the playlists
-            /* Sending Protocol:
-             * "NEW LIST" (except for 1st sent list)
-             * playlist name
-             * all songs
-             * repeat
-             * "NO MORE PLAYLISTS"
-             */
-            ArrayList<Pair<String, ArrayList<String>>> playlists=iTunesInterface.generateM3UPlaylists(readituneslibrary);
-            for(Pair<String,ArrayList<String>> playlist:playlists){
-                out.println(playlist.getValue0());
-                for(String song:playlist.getValue1()){
-                    out.println(song);
-                }
-                out.println("NEW LIST");
-            }
-            out.println("NO MORE PLAYLISTS");
-            
-            out.close();
-            in.close();
-            pout.close();       
-            phone.close();
-            System.out.println("Sync finished");
-        }
-
-
-        //readituneslibrary.close();     
-        //androidConnection.close();
+        
+        readituneslibrary.close();
     }
     
     /**
@@ -196,7 +88,7 @@ public class Desktop_Server {
      * @param metadata 
      * @throws IOException 
      */
-    private static void conversion(String song, String metadata) throws IOException {
+    public static void conversion(String song, String metadata) throws IOException {
         //convert the file and add metadata + keep existing metadata and trying to preserving artwork
         //TODO need to change conversion codec based on the chosen file extension
         String ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec libmp3lame -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
@@ -268,9 +160,9 @@ public class Desktop_Server {
      * Every update just recreates the entire thing. Handles removed songs, added songs, stops accidental duplication.
      * To keep memory usage low, only call this when about to sync, and discard list when sync finishes.
      * @param locationpath the path of the current folder (changed for file tree recursion)
-     * @param songfilenames a reference to the arraylist of songs
+     * @param songfilenames a reference to the arraylist of songs (want external reference because this method recurses)
      */
-    private static void generateList(ArrayList<String> songfilenames, String locationpath){
+    public static void generateList(ArrayList<String> songfilenames, String locationpath){
         File folder = new File(locationpath);
         
         for(File f:folder.listFiles()){
