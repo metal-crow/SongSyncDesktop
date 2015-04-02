@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
 import java.util.ArrayList;
 
 
@@ -16,7 +17,8 @@ public class Desktop_Server {
     private static String convertMusicTo;
     private static String ffmpegCommand;
     private static final boolean debugFFmpeg=false;
-    public volatile static boolean listen=true;
+    public volatile static boolean listen=true;//thread's listen to know when to end
+    public volatile static String sync_type="N";//what type of sync we're doing. Need threads to be able to edit
     
     public static void main(String[] args) throws IOException {
         //load params from ini file
@@ -59,25 +61,48 @@ public class Desktop_Server {
             System.err.println("Unable to find ini file.");
             System.exit(0);
         }
-        BufferedReader initfileparams=new BufferedReader(new FileReader("SongSyncInfo.ini"));
+        BufferedReader initfileparams=new BufferedReader(new FileReader(inifile));
+        //older ini file copy to check for changes. Read simultaneously, and when w read data check if it differs on old one.
+        BufferedReader chk_tmp_initfileparams=new BufferedReader(new FileReader("SongSyncInfo.ini.tmp"));
+
         String line=initfileparams.readLine();
+        String tmp_line=chk_tmp_initfileparams.readLine();
         while(line!=null){
             if(!line.contains("#")){
                 if(line.toLowerCase().contains("musicdirectorypath")){
                     musicDirectoryPath=line.substring(19);
+                    if(!tmp_line.substring(19).equals(musicDirectoryPath)){
+                        sync_type="R";
+                    }
                 }else if(line.toLowerCase().contains("ffmpegexelocation")){
                     ffmpegEXElocation=line.substring(18);
+                    if(!tmp_line.substring(18).equals(ffmpegEXElocation)){
+                        sync_type="R";
+                    }
                 }else if(line.toLowerCase().contains("itunesdatalibraryfile")){
                     iTunesDataLibraryFile=line.substring(22);
+                    if(!tmp_line.substring(22).equals(iTunesDataLibraryFile)){
+                        sync_type="R";
+                    }
                 }else if(line.toLowerCase().contains("convertsongsto")){
                     convertMusicTo=line.substring(15);
+                    if(!tmp_line.substring(15).equals(convertMusicTo)){
+                        sync_type="R";
+                    }
                 }else if(line.toLowerCase().contains("ffmpegcommand") && line.substring(14).length()>1){
                     ffmpegCommand=line.substring(14);
+                    if(!tmp_line.substring(14).equals(ffmpegCommand)){
+                        sync_type="R";
+                    }
                 }
             }
             line=initfileparams.readLine();
+            tmp_line=chk_tmp_initfileparams.readLine();
         }
         initfileparams.close();
+        chk_tmp_initfileparams.close();
+        //make copy to verify against new changes now that we know what has changed for this session
+        Files.copy(inifile.toPath(), new File("SongSyncInfo.ini.tmp").toPath());
     }
 
     /**

@@ -48,7 +48,8 @@ public class Wifi_Thread extends Thread {
                 BufferedOutputStream pout=new BufferedOutputStream(phone.getOutputStream());//writer for the song bytes
 
                 //write out sync type(normal "N", full resync "R")
-                out.println(x);
+                out.println(Desktop_Server.sync_type);
+                Desktop_Server.sync_type="N";//change back sync type to normal, now that we've done a full resync
                 
                 //generate the list of all songs
                 ArrayList<String> songs=new ArrayList<String>();
