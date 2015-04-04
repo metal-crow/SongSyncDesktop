@@ -73,7 +73,7 @@ public class Wifi_Thread extends Thread {
                     //find the songs filetype, and convert it if it needs to be converted
                     String filetype=songpath.substring(songpath.lastIndexOf("."));
                     //if we're using iTunes we always need to remux to add iTunes metadata and art
-                    if(!filetype.equals(convertMusicTo) || useiTunesDataLibraryFile){
+                    if((!convertMusicTo.equals("") && !filetype.equals(convertMusicTo)) || useiTunesDataLibraryFile){
                             String metadata="";
                             if(useiTunesDataLibraryFile){
                                 metadata=iTunesInterface.scanForitunesMetadata(request,readituneslibrary,iTunesDataLibraryFile);

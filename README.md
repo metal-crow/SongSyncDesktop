@@ -26,12 +26,14 @@ Just copy over the entire filestructure directly, so we dont worry about metadat
 `ToDo`:
  
    * <s>add itunes library info to mp3 tags before sending</s>  
+   * <s>do not convert to mp3 if file is already mp3, only remux</s>  
+   * <s>make conversion optional</s>  
    * <s>add itunes album art to mp3</s>  
    * <s>send over playlists</s>  
    * chose what playlists to transfer  
-   * <s>choose what to convert song to</s>  
+   * <s>choose what to convert song to(codec list)</s>  
    * <s>delete all songs on phone and resend them if conversion type changes</s> 
-   * <s>detect when to force full resync (if conversion bitrate,type,etc changes)<s/> 
+   * <s>detect when to force full resync (if conversion bitrate,type,etc changes)</s> 
    * handle sending music over direct usb link  
    * ability to pass info about what music to delete from phone to computer  
    * Test what happens if song is dropped, fix it  

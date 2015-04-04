@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 public class Desktop_Server {
@@ -19,6 +20,11 @@ public class Desktop_Server {
     private static final boolean debugFFmpeg=false;
     public volatile static boolean listen=true;//thread's listen to know when to end
     public volatile static String sync_type="N";//what type of sync we're doing. Need threads to be able to edit
+    //map codes to file extensions
+    private static HashMap<String,String> codecs=new HashMap<String,String>();
+    static{
+        codecs.put(".mp3", "libmp3lame");
+    }
     
     public static void main(String[] args) throws IOException {
         //load params from ini file
@@ -57,13 +63,17 @@ public class Desktop_Server {
      */
     private static void loadIniFile() throws IOException {
         File inifile=new File("SongSyncInfo.ini");
+        File inifile_check=new File("SongSyncInfo.ini.tmp");
         if(!inifile.exists()){
             System.err.println("Unable to find ini file.");
             System.exit(0);
         }
+        if(!inifile_check.exists()){
+            Files.copy(inifile.toPath(), inifile_check.toPath());
+        }
         BufferedReader initfileparams=new BufferedReader(new FileReader(inifile));
         //older ini file copy to check for changes. Read simultaneously, and when w read data check if it differs on old one.
-        BufferedReader chk_tmp_initfileparams=new BufferedReader(new FileReader("SongSyncInfo.ini.tmp"));
+        BufferedReader chk_tmp_initfileparams=new BufferedReader(new FileReader(inifile_check));
 
         String line=initfileparams.readLine();
         String tmp_line=chk_tmp_initfileparams.readLine();
@@ -102,21 +112,36 @@ public class Desktop_Server {
         initfileparams.close();
         chk_tmp_initfileparams.close();
         //make copy to verify against new changes now that we know what has changed for this session
-        Files.copy(inifile.toPath(), new File("SongSyncInfo.ini.tmp").toPath());
+        Files.copy(inifile.toPath(), inifile_check.toPath());
     }
 
     /**
      * Convert the given audio file into the desired format. This method will block until ffmpeg finished converting.
      * Also add the metadata and album art if available
-     * TODO this can be optimized for various scenarios. Not doing that right now.
      * @param song the song to be converted
      * @param metadata 
      * @throws IOException 
      */
     public static void conversion(String song, String metadata) throws IOException {
-        //convert the file and add metadata + keep existing metadata and trying to preserving artwork
-        //TODO need to change conversion codec based on the chosen file extension
-        String ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec libmp3lame -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
+        String ffmpegcmmd = null;
+        //if the song isn't native filetype, we need to convert it
+        boolean convert=!song.substring(song.lastIndexOf('.')).equals(convertMusicTo);
+        //if we are using itunes, we need to remux file with metadata
+        boolean remux=!metadata.equals("");
+        
+        //convert the file and remux
+        if(convert && remux){
+            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec "+codecs.get(convertMusicTo)+" -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
+        }
+        //only convert
+        else if(convert && !remux){
+            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec "+codecs.get(convertMusicTo)+"-y tempout"+convertMusicTo;
+        }
+        //only remux
+        else if(!convert && remux){
+            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
+        }
+        //overwrite for user specified command
         if(ffmpegCommand!=null){
             ffmpegcmmd=ffmpegEXElocation+" "+ffmpegCommand;
         }
