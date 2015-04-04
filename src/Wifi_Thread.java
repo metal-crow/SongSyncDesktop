@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 
 import org.javatuples.Pair;
@@ -36,6 +37,7 @@ public class Wifi_Thread extends Thread {
         try{
             //open server socket
             ServerSocket androidConnection=new ServerSocket(9091);
+            androidConnection.setSoTimeout(5000);
             System.out.println("Listening on port "+androidConnection.getLocalPort()+" at host "+androidConnection.getInetAddress().getHostName());
             
             //loop and listen for connection
@@ -143,6 +145,8 @@ public class Wifi_Thread extends Thread {
             
             androidConnection.close();
             
+        }catch(SocketTimeoutException e){
+            System.out.println("Wifi Thread closed.");
         }catch(IOException e){
             System.err.println("Unrecoverable network/file io error.");
             e.printStackTrace();

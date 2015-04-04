@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -32,6 +33,7 @@ public class Desktop_Server {
         try {
             loadIniFile();
         } catch (IOException e1) {
+            e1.printStackTrace();
             System.err.println("Ini file is invalid or does not exist.");
             System.exit(0);
         }
@@ -54,16 +56,18 @@ public class Desktop_Server {
         wifi.start();
         //start usb connection listener thread
         
+        //listen for user command to end server
         String userend="";
         Scanner in=new Scanner(System.in);
-        System.out.println("Do you want to end the server? Y/N");
-        while(!userend.equals("N")){
+        System.out.println("Type 'end' to end the server.");
+        while(!userend.equals("end")){
             userend=in.next();
-            if(userend.equals("N")){
+            if(userend.equals("end")){
                 listen=false;
             }
         }
         
+        System.out.println("Exiting");
         in.close();
         readituneslibrary.close();
     }
@@ -80,7 +84,7 @@ public class Desktop_Server {
             System.exit(0);
         }
         if(!inifile_check.exists()){
-            Files.copy(inifile.toPath(), inifile_check.toPath());
+            Files.copy(inifile.toPath(), inifile_check.toPath(),StandardCopyOption.REPLACE_EXISTING);
         }
         BufferedReader initfileparams=new BufferedReader(new FileReader(inifile));
         //older ini file copy to check for changes. Read simultaneously, and when w read data check if it differs on old one.
@@ -123,7 +127,7 @@ public class Desktop_Server {
         initfileparams.close();
         chk_tmp_initfileparams.close();
         //make copy to verify against new changes now that we know what has changed for this session
-        Files.copy(inifile.toPath(), inifile_check.toPath());
+        Files.copy(inifile.toPath(), inifile_check.toPath(),StandardCopyOption.REPLACE_EXISTING);
     }
 
     /**
