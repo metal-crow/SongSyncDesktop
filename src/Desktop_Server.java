@@ -8,6 +8,7 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Scanner;
 
 
 public class Desktop_Server {
@@ -53,7 +54,17 @@ public class Desktop_Server {
         wifi.start();
         //start usb connection listener thread
         
+        String userend="";
+        Scanner in=new Scanner(System.in);
+        System.out.println("Do you want to end the server? Y/N");
+        while(!userend.equals("N")){
+            userend=in.next();
+            if(userend.equals("N")){
+                listen=false;
+            }
+        }
         
+        in.close();
         readituneslibrary.close();
     }
     

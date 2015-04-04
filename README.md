@@ -37,7 +37,7 @@ Just copy over the entire filestructure directly, so we dont worry about metadat
    * handle sending music over direct usb link  
    * ability to pass info about what music to delete from phone to computer  
    * Test what happens if song is dropped, fix it  
-   * Add a way for user to end the server  
+   * <s>Add a way for user to end the server</s>  
   
 **Using:**   
 Apache common lang library  
