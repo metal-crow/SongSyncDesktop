@@ -64,6 +64,7 @@ public class Desktop_Server {
             userend=in.next();
             if(userend.equals("end")){
                 listen=false;
+                wifi.stop_connection();
             }
         }
         

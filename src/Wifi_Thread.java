@@ -10,7 +10,7 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 import org.javatuples.Pair;
@@ -23,6 +23,7 @@ public class Wifi_Thread extends Thread {
     private boolean useiTunesDataLibraryFile;
     private RandomAccessFile readituneslibrary;
     private String iTunesDataLibraryFile;
+    private ServerSocket androidConnection;
     
     public Wifi_Thread(String musicDirectoryPath, String convertMusicTo, boolean useiTunesDataLibraryFile, RandomAccessFile readituneslibrary, String iTunesDataLibraryFile) {
         this.musicDirectoryPath = musicDirectoryPath;
@@ -31,13 +32,20 @@ public class Wifi_Thread extends Thread {
         this.readituneslibrary = readituneslibrary;
         this.iTunesDataLibraryFile = iTunesDataLibraryFile;
     }
+    
+    public void stop_connection(){
+        try {
+            androidConnection.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public void run() {
         try{
             //open server socket
-            ServerSocket androidConnection=new ServerSocket(9091);
-            androidConnection.setSoTimeout(5000);
+            androidConnection=new ServerSocket(9091);
             System.out.println("Listening on port "+androidConnection.getLocalPort()+" at host "+androidConnection.getInetAddress().getHostName());
             
             //loop and listen for connection
@@ -145,7 +153,7 @@ public class Wifi_Thread extends Thread {
             
             androidConnection.close();
             
-        }catch(SocketTimeoutException e){
+        }catch(SocketException e){
             System.out.println("Wifi Thread closed.");
         }catch(IOException e){
             System.err.println("Unrecoverable network/file io error.");
