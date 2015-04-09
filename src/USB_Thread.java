@@ -13,8 +13,9 @@ public class USB_Thread extends Thread {
         //start the adb listening daemon
         Runtime runtime = Runtime.getRuntime();
         try {
-            runtime.exec(adbExe+" start-server");
-        } catch (IOException e) {
+            Process p=runtime.exec(adbExe+" start-server");
+            p.waitFor();
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             System.err.println("Error starting usb listener");
         }

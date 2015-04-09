@@ -151,8 +151,6 @@ public class Wifi_Thread extends Thread {
                 System.out.println("Sync finished");
             }
             
-            androidConnection.close();
-            
         }catch(SocketException e){
             System.out.println("Wifi Thread closed.");
         }catch(IOException e){
