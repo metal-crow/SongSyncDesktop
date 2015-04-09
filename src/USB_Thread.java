@@ -11,13 +11,15 @@ public class USB_Thread extends Thread {
     public USB_Thread(String adbExe) {
         this.adbExe=adbExe;
         //start the adb listening daemon
-        Runtime runtime = Runtime.getRuntime();
-        try {
-            Process p=runtime.exec(adbExe+" start-server");
-            p.waitFor();
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            System.err.println("Error starting usb listener");
+        if(!adbExe.isEmpty()){
+            Runtime runtime = Runtime.getRuntime();
+            try {
+                Process p=runtime.exec(adbExe+" start-server");
+                p.waitFor();
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+                System.err.println("Error starting usb listener. Is your adb.exe locaiton correct?");
+            }
         }
     }
     
