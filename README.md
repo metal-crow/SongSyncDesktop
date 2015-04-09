@@ -21,7 +21,7 @@ Server reads this list and sends the music,which are saved to the phone's music 
 Notes
 -
 ITunes doesnt write song info to music file metadata, cant assume that about the music for itunes or other media players.  
-Just copy over the entire filestructure directly, so we dont worry about metadata or duplicates. That should have been handled by the music player when making the filestucture.  
+Just copy over the entire filestructure directly, so we dont worry about metadata or duplicates. That should have been handled by the music player when making the filestucture.    
   
 `ToDo`:
  
@@ -45,3 +45,9 @@ JavaTuples
   
 **Dependencies:**  
 ffmpeg  
+
+FAQ
+-
+To use the usb connection ability, the android sdk must be installed. More specificly, you need the adb.exe executable usually installed in C:\Users\[User]\AppData\Local\Android\android-sdk\platform-tools by the android sdk.
+
+Make sure you have the drivers for your phone installed (use manufacuror's drivers), or the phone may not be detected when plugged in via usb.

@@ -19,6 +19,7 @@ public class Desktop_Server {
     private static String iTunesDataLibraryFile;
     private static String convertMusicTo;
     private static String ffmpegCommand;
+    private static String adbExe;
     private static final boolean debugFFmpeg=false;
     public volatile static boolean listen=true;//thread's listen to know when to end
     public volatile static String sync_type="N";//what type of sync we're doing. Need threads to be able to edit
@@ -55,16 +56,23 @@ public class Desktop_Server {
         Wifi_Thread wifi=new Wifi_Thread(musicDirectoryPath, convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile);
         wifi.start();
         //start usb connection listener thread
+        USB_Thread usb=new USB_Thread(adbExe);
+        if(!adbExe.equals("")){
+            usb.start();
+        }
         
         //listen for user command to end server
         String userend="";
         Scanner in=new Scanner(System.in);
-        System.out.println("Type 'end' to end the server.");
-        while(!userend.equals("end")){
+        System.out.println("Type 'c' to force a wired sync, 'end' to end the server.");
+        while(listen){
             userend=in.next();
-            if(userend.equals("end")){
+            if(userend.equalsIgnoreCase("end")){
                 listen=false;
                 wifi.stop_connection();
+                usb.stop_connection();
+            }else if(userend.equalsIgnoreCase("c")){
+                //check that wired sync is enabled
             }
         }
         
@@ -120,6 +128,8 @@ public class Desktop_Server {
                     if(!tmp_line.substring(14).equals(ffmpegCommand)){
                         sync_type="R";
                     }
+                }else if(line.toLowerCase().contains("adblocation") && line.substring(12).length()>1){
+                    adbExe=line.substring(12);
                 }
             }
             line=initfileparams.readLine();

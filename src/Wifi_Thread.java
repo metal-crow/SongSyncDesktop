@@ -51,7 +51,7 @@ public class Wifi_Thread extends Thread {
             //loop and listen for connection
             while(Desktop_Server.listen){
                 Socket phone = androidConnection.accept();
-                System.out.println("Connection get!");
+                System.out.println("Sync Connection via WiFi.");
                 
                 PrintWriter out=new PrintWriter(new OutputStreamWriter(phone.getOutputStream(), "utf-8"), true);//writer for song names/length
                 BufferedReader in=new BufferedReader(new InputStreamReader(phone.getInputStream(), "utf-8"));//listener for phone requests/info
