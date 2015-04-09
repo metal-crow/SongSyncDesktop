@@ -17,4 +17,4 @@ ConvertSongsTo=.mp3
 ffmpegCommand=
 
 #the location of adb.exe for finding udb connections. Leaving this blank will disable the usb sync feature. [optional]
-adbLocation=C:\Users\Manganese\AppData\Local\Android\android-sdk\platform-tools\adb.exe
+adbLocation=adb.exe

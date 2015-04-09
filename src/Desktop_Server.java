@@ -56,23 +56,27 @@ public class Desktop_Server {
         Wifi_Thread wifi=new Wifi_Thread(musicDirectoryPath, convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile);
         wifi.start();
         //start usb connection listener thread
-        USB_Thread usb=new USB_Thread(adbExe);
-        if(!adbExe.equals("")){
+        USB_Thread usb=new USB_Thread(adbExe,musicDirectoryPath,convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile);
+        if(!adbExe.isEmpty()){
             usb.start();
         }
         
         //listen for user command to end server
         String userend="";
         Scanner in=new Scanner(System.in);
-        System.out.println("Type 'c' to force a wired sync, 'end' to end the server.");
+        if(!adbExe.isEmpty()){
+            System.out.println("Type 'c' to force a wired sync, 'end' to end the server.");
+        }else{
+            System.out.println("Type 'end' to end the server.");
+        }
         while(listen){
             userend=in.next();
             if(userend.equalsIgnoreCase("end")){
                 listen=false;
                 wifi.stop_connection();
                 usb.stop_connection();
-            }else if(userend.equalsIgnoreCase("c")){
-                //check that wired sync is enabled
+            }else if(userend.equalsIgnoreCase("c") && !adbExe.isEmpty()){
+                
             }
         }
         
@@ -110,9 +114,6 @@ public class Desktop_Server {
                     }
                 }else if(line.toLowerCase().contains("ffmpegexelocation")){
                     ffmpegEXElocation=line.substring(18);
-                    if(!tmp_line.substring(18).equals(ffmpegEXElocation)){
-                        sync_type="R";
-                    }
                 }else if(line.toLowerCase().contains("itunesdatalibraryfile")){
                     iTunesDataLibraryFile=line.substring(22);
                     if(!tmp_line.substring(22).equals(iTunesDataLibraryFile)){

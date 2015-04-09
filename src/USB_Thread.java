@@ -1,15 +1,27 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
+import java.util.ArrayList;
 
 
 public class USB_Thread extends Thread {
 
     private String adbExe;
     private boolean connection;
+    private String musicDirectoryPath;
+    private String convertMusicTo;
+    private boolean useiTunesDataLibraryFile;
+    private RandomAccessFile readituneslibrary;
+    private String iTunesDataLibraryFile;
     
-    public USB_Thread(String adbExe) {
+    public USB_Thread(String adbExe, String musicDirectoryPath, String convertMusicTo, boolean useiTunesDataLibraryFile, RandomAccessFile readituneslibrary, String iTunesDataLibraryFile) {
         this.adbExe=adbExe;
+        this.musicDirectoryPath = musicDirectoryPath;
+        this.convertMusicTo = convertMusicTo;
+        this.useiTunesDataLibraryFile = useiTunesDataLibraryFile;
+        this.readituneslibrary = readituneslibrary;
+        this.iTunesDataLibraryFile = iTunesDataLibraryFile;
         //start the adb listening daemon
         if(!adbExe.isEmpty()){
             Runtime runtime = Runtime.getRuntime();
@@ -18,7 +30,7 @@ public class USB_Thread extends Thread {
                 p.waitFor();
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
-                System.err.println("Error starting usb listener. Is your adb.exe locaiton correct?");
+                System.err.println("Error starting usb listener. Is your adb.exe location correct?");
             }
         }
     }
@@ -53,6 +65,11 @@ public class USB_Thread extends Thread {
             if(newConnection && !connection){
                 connection=true;//phone is connected, dont resync
                 System.out.println("Sync Connection via USB");
+                
+                //generate the list of all songs
+                ArrayList<String> songs=new ArrayList<String>();
+                Desktop_Server.generateList(songs, musicDirectoryPath);
+
                 
             }
         }
