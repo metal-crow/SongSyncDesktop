@@ -21,7 +21,7 @@ public class Desktop_Server {
     private static String ffmpegCommand;
     private static String adbExe;
     private static final boolean debugFFmpeg=false;
-    public volatile static boolean listen=true;//thread's listen to know when to end
+    private static boolean listen=true;//thread's listen to know when to end
     public volatile static String sync_type="N";//what type of sync we're doing. Need threads to be able to edit
     //map codes to file extensions
     private static HashMap<String,String> codecs=new HashMap<String,String>();
