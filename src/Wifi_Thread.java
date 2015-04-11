@@ -24,6 +24,7 @@ public class Wifi_Thread extends Thread {
     private RandomAccessFile readituneslibrary;
     private String iTunesDataLibraryFile;
     private ServerSocket androidConnection;
+    private boolean listen=true;
     
     public Wifi_Thread(String musicDirectoryPath, String convertMusicTo, boolean useiTunesDataLibraryFile, RandomAccessFile readituneslibrary, String iTunesDataLibraryFile) {
         this.musicDirectoryPath = musicDirectoryPath;
@@ -39,6 +40,7 @@ public class Wifi_Thread extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        listen=false;
     }
 
     @Override
@@ -49,7 +51,7 @@ public class Wifi_Thread extends Thread {
             System.out.println("Listening on port "+androidConnection.getLocalPort()+" at host "+androidConnection.getInetAddress().getHostName());
             
             //loop and listen for connection
-            while(Desktop_Server.listen){
+            while(listen){
                 Socket phone = androidConnection.accept();
                 System.out.println("Sync Connection via WiFi.");
                 
@@ -99,7 +101,7 @@ public class Wifi_Thread extends Thread {
                                 System.exit(0);
                             }
                             //change the file to point to the converted song
-                            songpath="tempout.mp3";
+                            songpath="tempout"+convertMusicTo;
                     }
                     
                     //convert the song to an array of bytes
