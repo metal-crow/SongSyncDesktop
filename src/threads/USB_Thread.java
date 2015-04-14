@@ -149,7 +149,7 @@ public class USB_Thread extends Parent_Thread {
      */
     private void generateSongListFromMasterList(Runtime runtime, ArrayList<String> listOfSongsToAdd, ArrayList<String> master_song_list) throws IOException, InterruptedException {
         //first copy file from phone to local
-        runtime.exec(adbExe+" pull /extSdCard/SongSync/SongSync_Song_List.txt /").waitFor();
+        runtime.exec(adbExe+" pull /extSdCard/SongSync/SongSync_Song_List.txt SongSync_Song_List.txt").waitFor();
         //read this into memory
         BufferedReader in = new BufferedReader(new FileReader("SongSync_Song_List.txt"));
         while(in.ready()){

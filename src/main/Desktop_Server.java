@@ -77,7 +77,7 @@ public class Desktop_Server {
                 wifi.stop_connection();
                 usb.stop_connection();
             }else if(userend.equalsIgnoreCase("c") && !adbExe.isEmpty()){
-                
+                usb.try_force_connection();
             }
         }
         
