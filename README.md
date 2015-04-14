@@ -34,7 +34,7 @@ Just copy over the entire filestructure directly, so we dont worry about metadat
    * <s>choose what to convert song to(codec list)</s>  
    * <s>delete all songs on phone and resend them if conversion type changes</s> 
    * <s>detect when to force full resync (if conversion bitrate,type,etc changes)</s> 
-   * handle sending music over direct usb link  
+   * <s>handle sending music over direct usb link</s>  
    * ability to pass info about what music to delete from phone to computer  
    * Test what happens if song is dropped, fix it  
    * <s>Add a way for user to end the server</s>  
