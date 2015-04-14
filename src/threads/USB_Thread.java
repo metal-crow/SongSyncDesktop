@@ -1,5 +1,6 @@
 package threads;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -9,7 +10,10 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.javatuples.Pair;
+
 import main.Desktop_Server;
+import musicPlayerInterface.iTunesInterface;
 
 
 public class USB_Thread extends Parent_Thread {
@@ -83,10 +87,9 @@ public class USB_Thread extends Parent_Thread {
                     
                     //out now has the the same as in, missing songs we remove. remove those now
                     for(String rmSong:master_song_list){
-                        runtime.exec(adbExe+" shell rm "+rmSong).waitFor();
+                        runtime.exec(adbExe+" shell rm /extSdCard/SongSync/Music"+rmSong).waitFor();
                     }
                     //push the updated out file, which matches the music to not include the files we just removed
-                    runtime.exec(adbExe+" shell rm /extSdCard/SongSync/SongSync_Song_List.txt").waitFor();
                     runtime.exec(adbExe+" push SongSync_Song_List.txt /extSdCard/SongSync").waitFor();
                     
                     //for all the new songs
@@ -95,10 +98,12 @@ public class USB_Thread extends Parent_Thread {
                             convertSong(newSong);
                             
                             //write song to phone
-                            runtime.exec(adbExe+" push tempout"+convertMusicTo+" /extSdCard/SongSync/Music/").waitFor();
+                            runtime.exec(adbExe+" push tempout"+convertMusicTo+" /extSdCard/SongSync/Music"+newSong.substring(newSong.lastIndexOf('/'))).waitFor();
 
                             //append the new written song to the txt list, and push the updated list to the phone. This is slow, but allows resume from interrupts.
                             out.write(newSong+"\n");
+                            out.flush();
+                            runtime.exec(adbExe+" push SongSync_Song_List.txt /extSdCard/SongSync").waitFor();
                             
                         }catch(IOException | InterruptedException e){
                             e.printStackTrace();
@@ -106,9 +111,25 @@ public class USB_Thread extends Parent_Thread {
                         }
                     }
                     
+                    if(useiTunesDataLibraryFile){
+                        ArrayList<Pair<String, ArrayList<String>>> playlists=iTunesInterface.generateM3UPlaylists(readituneslibrary);
+                        for(Pair<String,ArrayList<String>> playlist:playlists){
+                            //write this playlist to a local file
+                            File playlistfile=new File(playlist.getValue0()+".m3u");
+                            BufferedWriter plout=new BufferedWriter(new FileWriter(playlistfile));
+                            //write all songs in playlist
+                            for(String song:playlist.getValue1()){
+                                plout.write(song+"\n");
+                            }
+                            plout.close();
+                            //write this file to the phone
+                            runtime.exec(adbExe+" push "+playlist.getValue0()+".m3u /extSdCard/SongSync/PlayLists").waitFor();
+                        }
+                    }
+                    
                     out.close();
                 } catch (IOException | InterruptedException e) {
-                    System.err.println("Unrecoverable usb reading error.");
+                    System.err.println("Unrecoverable usb reading or execution error.");
                     e.printStackTrace();
                 }
             }
@@ -134,6 +155,7 @@ public class USB_Thread extends Parent_Thread {
         while(in.ready()){
             master_song_list.add(in.readLine());
         }
+        in.close();
         
         //generate the list of all songs
         ArrayList<String> songs=new ArrayList<String>();
@@ -158,8 +180,8 @@ public class USB_Thread extends Parent_Thread {
                 listOfSongsToAdd.add(recieve);
             }
         }
-        in.close();
         out.close();
+        new File("SongSync_Song_List.txt").delete();
         new File("SongSync_Song_List.txt.new").renameTo(new File("SongSync_Song_List.txt"));
     }
 
@@ -183,4 +205,5 @@ public class USB_Thread extends Parent_Thread {
     public void try_force_connection(){
         connection=true;
     }
+    
 }

@@ -12,7 +12,7 @@ public class Parent_Thread extends Thread {
 
     protected String musicDirectoryPath;
     protected String convertMusicTo;
-    private boolean useiTunesDataLibraryFile;
+    protected boolean useiTunesDataLibraryFile;
     protected RandomAccessFile readituneslibrary;
     private String iTunesDataLibraryFile;
     private String ffmpegEXElocation;
