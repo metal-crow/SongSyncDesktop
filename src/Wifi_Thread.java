@@ -79,51 +79,13 @@ public class Wifi_Thread extends Thread {
                 //recieve the request list from the phone and send over each song per request
                 String request=in.readLine();
                 while(request!=null && !request.equals("END OF SONG DOWNLOADS")){
-                    String songpath=musicDirectoryPath+request;
-                    System.out.println("got request for "+request);
-                    
-                    //find the songs filetype, and convert it if it needs to be converted
-                    String filetype=songpath.substring(songpath.lastIndexOf("."));
-                    //if we're using iTunes we always need to remux to add iTunes metadata and art
-                    if((!convertMusicTo.equals("") && !filetype.equals(convertMusicTo)) || useiTunesDataLibraryFile){
-                            String metadata="";
-                            if(useiTunesDataLibraryFile){
-                                metadata=iTunesInterface.scanForitunesMetadata(request,readituneslibrary,iTunesDataLibraryFile);
-                            }
-                            try {
-                                Desktop_Server.conversion(songpath, metadata);
-                            } catch (IOException e) {
-                                System.err.println(e.getMessage()+". Aborting sync.");
-                                out.close();
-                                in.close();
-                                pout.close();       
-                                phone.close();
-                                System.exit(0);
-                            }
-                            //change the file to point to the converted song
-                            songpath="tempout"+convertMusicTo;
+                    try{
+                        String songpath=convertSong(request);
+                        sendSong(request, out, pout, in);
+                    }catch(IOException e){
+                        e.printStackTrace();
+                        System.out.println("Converion failure for "+request);
                     }
-                    
-                    //convert the song to an array of bytes
-                    byte [] songinbyte  = new byte [(int)(new File(songpath).length())];
-                    BufferedInputStream bis = new BufferedInputStream(new FileInputStream(songpath));
-                    bis.read(songinbyte,0,songinbyte.length);
-                    bis.close();
-                        
-                    //TODO retry sending the song if we do not receive confirmation for both receive song length and song
-                    //write the length to receive
-                    out.println(String.valueOf(songinbyte.length));
-                    
-                    //wait to receive a confirmation phone is ready to receive the song
-                    String confirm=in.readLine();
-                    
-                    if(confirm.equals("READY")){
-                        //write the bytes to the phone (this is auto split into smaller packets)
-                        pout.write(songinbyte,0,songinbyte.length);
-                        System.out.println("Wrote song");
-                        pout.flush();
-                    }
-                        
                     request=in.readLine();
                 }
                 
@@ -159,5 +121,60 @@ public class Wifi_Thread extends Thread {
             System.err.println("Unrecoverable network/file io error.");
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Given songpath, send the song to the phone
+     * @param songpath
+     * @param out
+     * @param pout
+     * @param in
+     * @throws IOException
+     */
+    private void sendSong(String songpath, PrintWriter out, BufferedOutputStream pout, BufferedReader in) throws IOException {
+        //convert the song to an array of bytes
+        byte [] songinbyte  = new byte [(int)(new File(songpath).length())];
+        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(songpath));
+        bis.read(songinbyte,0,songinbyte.length);
+        bis.close();
+            
+        //write the length to receive
+        out.println(String.valueOf(songinbyte.length));
+        
+        //wait to receive a confirmation phone is ready to receive the song
+        String confirm=in.readLine();
+        
+        if(confirm.equals("READY")){
+            //write the bytes to the phone (this is auto split into smaller packets)
+            pout.write(songinbyte,0,songinbyte.length);
+            System.out.println("Wrote song");
+            pout.flush();
+        }        
+    }
+
+    /**
+     * Given song location, check if needs to be converted, convert, point to converted location
+     * @param request
+     * @return
+     * @throws IOException
+     */
+    private String convertSong(String request) throws IOException {
+        String songpath=musicDirectoryPath+request;
+        System.out.println("got request for "+request);
+        
+        //find the songs filetype, and convert it if it needs to be converted
+        String filetype=songpath.substring(songpath.lastIndexOf("."));
+        //if we're using iTunes we always need to remux to add iTunes metadata and art
+        if((!convertMusicTo.equals("") && !filetype.equals(convertMusicTo)) || useiTunesDataLibraryFile){
+                String metadata="";
+                if(useiTunesDataLibraryFile){
+                    metadata=iTunesInterface.scanForitunesMetadata(request,readituneslibrary,iTunesDataLibraryFile);
+                }
+                Desktop_Server.conversion(songpath, metadata);
+                //change the file to point to the converted song
+                songpath="tempout"+convertMusicTo;
+        }
+        
+        return songpath;
     }
 }
