@@ -96,14 +96,16 @@ public class Wifi_Thread extends Parent_Thread {
                  * repeat
                  * "NO MORE PLAYLISTS"
                  */
-                ArrayList<Pair<String, ArrayList<String>>> playlists=iTunesInterface.generateM3UPlaylists(readituneslibrary);
-                for(Pair<String,ArrayList<String>> playlist:playlists){
-                    out.println(playlist.getValue0());//write playlist name
-                    //write all songs in playlist
-                    for(String song:playlist.getValue1()){
-                        out.println(song);
+                if(useiTunesDataLibraryFile){
+                    ArrayList<Pair<String, ArrayList<String>>> playlists=iTunesInterface.generateM3UPlaylists(readituneslibrary);
+                    for(Pair<String,ArrayList<String>> playlist:playlists){
+                        out.println(playlist.getValue0());//write playlist name
+                        //write all songs in playlist
+                        for(String song:playlist.getValue1()){
+                            out.println(song);
+                        }
+                        out.println("NEW LIST");
                     }
-                    out.println("NEW LIST");
                 }
                 out.println("NO MORE PLAYLISTS");
                 
