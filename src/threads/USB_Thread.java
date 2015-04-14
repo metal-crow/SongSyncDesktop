@@ -104,7 +104,7 @@ public class USB_Thread extends Parent_Thread {
                             //append the new written song to the txt list, and push the updated list to the phone. This is slow, but allows resume from interrupts.
                             out.write(newSong+"\n");
                             out.flush();
-                            runtime.exec(adbExe+" push SongSync_Song_List.txt /extSdCard/SongSync").waitFor();//TODO if this is interrupted, the file is lost.
+                            runtime.exec(adbExe+" push SongSync_Song_List.txt /extSdCard/SongSync/SongSync_Song_List.txt").waitFor();//TODO if this is interrupted, the file is lost.
                             
                         }catch(IOException | InterruptedException e){
                             e.printStackTrace();
@@ -132,9 +132,12 @@ public class USB_Thread extends Parent_Thread {
                 } catch (IOException | InterruptedException e) {
                     System.err.println("Unrecoverable usb reading or execution error.");
                     e.printStackTrace();
+                    clean_tmp();
                 }
             }
+            clean_tmp();
         }
+        clean_tmp();
         System.out.println("USB listener exiting.");
     }
 
@@ -149,10 +152,14 @@ public class USB_Thread extends Parent_Thread {
      * @throws InterruptedException
      */
     private void generateSongListFromMasterList(Runtime runtime, ArrayList<String> listOfSongsToAdd, ArrayList<String> master_song_list) throws IOException, InterruptedException {
-        //first copy file from phone to local(this will create an empty file if SongSync_Song_List.txt does not exist)
+        //first copy file from phone to local
         runtime.exec(adbExe+" pull /extSdCard/SongSync/SongSync_Song_List.txt SongSync_Song_List.txt").waitFor();
+        //create an empty file if SongSync_Song_List.txt does not exist
+        File ssl=new File("SongSync_Song_List.txt");
+        ssl.createNewFile();
+        
         //read this into memory
-        BufferedReader in = new BufferedReader(new FileReader("SongSync_Song_List.txt"));
+        BufferedReader in = new BufferedReader(new FileReader(ssl));
         while(in.ready()){
             master_song_list.add(in.readLine());
         }
@@ -182,7 +189,7 @@ public class USB_Thread extends Parent_Thread {
             }
         }
         out.close();
-        new File("SongSync_Song_List.txt").delete();
+        ssl.delete();
         new File("SongSync_Song_List.txt.new").renameTo(new File("SongSync_Song_List.txt"));
     }
 
@@ -198,6 +205,15 @@ public class USB_Thread extends Parent_Thread {
             e.printStackTrace();
         }
         listen=false;
+    }
+    
+    /**
+     * Clean tmp files created. This stops accidental drifts from last run.
+     */
+    private void clean_tmp(){
+        new File("SongSync_Song_List.txt").delete();
+        new File("tempout"+convertMusicTo).delete();
+        new File("tempalbumart.jpg").delete();
     }
     
     /**
