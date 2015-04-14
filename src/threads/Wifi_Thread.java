@@ -1,3 +1,4 @@
+package threads;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -12,26 +13,24 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import main.Desktop_Server;
+import musicPlayerInterface.iTunesInterface;
 
 import org.javatuples.Pair;
 
 
-public class Wifi_Thread extends Thread {
-
-    private String musicDirectoryPath;
-    private String convertMusicTo;
-    private boolean useiTunesDataLibraryFile;
-    private RandomAccessFile readituneslibrary;
-    private String iTunesDataLibraryFile;
+public class Wifi_Thread extends Parent_Thread {
     private ServerSocket androidConnection;
-    private boolean listen=true;
+    private boolean listen;
     
-    public Wifi_Thread(String musicDirectoryPath, String convertMusicTo, boolean useiTunesDataLibraryFile, RandomAccessFile readituneslibrary, String iTunesDataLibraryFile) {
-        this.musicDirectoryPath = musicDirectoryPath;
-        this.convertMusicTo = convertMusicTo;
-        this.useiTunesDataLibraryFile = useiTunesDataLibraryFile;
-        this.readituneslibrary = readituneslibrary;
-        this.iTunesDataLibraryFile = iTunesDataLibraryFile;
+    public Wifi_Thread(String musicDirectoryPath, String convertMusicTo,
+            boolean useiTunesDataLibraryFile,
+            RandomAccessFile readituneslibrary, String iTunesDataLibraryFile,
+            String ffmpegEXElocation, String ffmpegCommand,
+            HashMap<String, String> codecs) {
+        super(musicDirectoryPath, convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile, ffmpegEXElocation, ffmpegCommand, codecs);
     }
     
     public void stop_connection(){
@@ -65,7 +64,7 @@ public class Wifi_Thread extends Thread {
                 
                 //generate the list of all songs
                 ArrayList<String> songs=new ArrayList<String>();
-                Desktop_Server.generateList(songs, musicDirectoryPath);
+                generateList(songs, musicDirectoryPath);
                 //write the filetype of the songs
                 out.println(convertMusicTo);
                 //write out all songs
@@ -82,7 +81,7 @@ public class Wifi_Thread extends Thread {
                     try{
                         String songpath=convertSong(request);
                         sendSong(songpath, out, pout, in);
-                    }catch(IOException e){
+                    }catch(IOException | InterruptedException e){
                         e.printStackTrace();
                         System.out.println("Converion failure for "+request);
                     }
@@ -152,29 +151,4 @@ public class Wifi_Thread extends Thread {
         }        
     }
 
-    /**
-     * Given song location, check if needs to be converted, convert, point to converted location
-     * @param request
-     * @return
-     * @throws IOException
-     */
-    private String convertSong(String request) throws IOException {
-        String songpath=musicDirectoryPath+request;
-        System.out.println("got request for "+request);
-        
-        //find the songs filetype, and convert it if it needs to be converted
-        String filetype=songpath.substring(songpath.lastIndexOf("."));
-        //if we're using iTunes we always need to remux to add iTunes metadata and art
-        if((!convertMusicTo.equals("") && !filetype.equals(convertMusicTo)) || useiTunesDataLibraryFile){
-                String metadata="";
-                if(useiTunesDataLibraryFile){
-                    metadata=iTunesInterface.scanForitunesMetadata(request,readituneslibrary,iTunesDataLibraryFile);
-                }
-                Desktop_Server.conversion(songpath, metadata);
-                //change the file to point to the converted song
-                songpath="tempout"+convertMusicTo;
-        }
-        
-        return songpath;
-    }
 }
