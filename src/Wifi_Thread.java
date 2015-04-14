@@ -81,7 +81,7 @@ public class Wifi_Thread extends Thread {
                 while(request!=null && !request.equals("END OF SONG DOWNLOADS")){
                     try{
                         String songpath=convertSong(request);
-                        sendSong(request, out, pout, in);
+                        sendSong(songpath, out, pout, in);
                     }catch(IOException e){
                         e.printStackTrace();
                         System.out.println("Converion failure for "+request);
