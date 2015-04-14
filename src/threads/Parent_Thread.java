@@ -1,6 +1,7 @@
 package threads;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,7 +10,8 @@ import musicPlayerInterface.iTunesInterface;
 
 
 public class Parent_Thread extends Thread {
-
+    private static final boolean print_cmd_output=false;
+    
     protected String musicDirectoryPath;
     protected String convertMusicTo;
     protected boolean useiTunesDataLibraryFile;
@@ -43,7 +45,7 @@ public class Parent_Thread extends Thread {
      */
     protected String convertSong(String request) throws IOException, InterruptedException {
         String songpath=musicDirectoryPath+request;
-        System.out.println("got request for "+request);
+        System.out.print("\nGot request for "+request);
         
         //find the songs filetype, and convert it if it needs to be converted
         String filetype=songpath.substring(songpath.lastIndexOf("."));
@@ -53,6 +55,7 @@ public class Parent_Thread extends Thread {
                 if(useiTunesDataLibraryFile){
                     metadata=iTunesInterface.scanForitunesMetadata(request,readituneslibrary,iTunesDataLibraryFile);
                 }
+                System.out.print(" Converting song");
                 conversion(songpath, metadata);
                 //change the file to point to the converted song
                 songpath="tempout"+convertMusicTo;
@@ -95,6 +98,7 @@ public class Parent_Thread extends Thread {
         Runtime runtime = Runtime.getRuntime();
         Process p=runtime.exec(ffmpegcmmd);
         
+        listen_process(p);
         p.waitFor();
         if(p.exitValue()!=0){
             throw new IOException("Failure in adding metadata");
@@ -110,7 +114,7 @@ public class Parent_Thread extends Thread {
         if(!(albumArt.exists() && albumArt.isFile() && albumArt.length()>0)){
             //extract the art from the original file
             String ffmpegArtExtract=ffmpegEXElocation+" -i \""+song+"\" -an -vcodec copy -y tempalbumart.jpg";
-            runtime.exec(ffmpegArtExtract).waitFor();
+            listen_process(runtime.exec(ffmpegArtExtract));//.waitFor();
             
             if(p.exitValue()!=0 && p.exitValue()!=1){
                 throw new IOException("Failure in extracting album art");
@@ -120,7 +124,7 @@ public class Parent_Thread extends Thread {
         //if the song have album art, if not, just skip this
         if(albumArt.exists() && albumArt.isFile() && albumArt.length()>0){
             String ffmpegAddArt=ffmpegEXElocation+" -i tempout"+convertMusicTo+" -i tempalbumart.jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 -y tempout2"+convertMusicTo;
-            runtime.exec(ffmpegAddArt).waitFor();
+            listen_process(runtime.exec(ffmpegAddArt));//.waitFor();
             
             if(p.exitValue()!=0){
                 throw new IOException("Failure in adding album art");
@@ -132,6 +136,23 @@ public class Parent_Thread extends Thread {
             new File("tempout2"+convertMusicTo).renameTo(orig);
             albumArt.delete();
         }
+    }
+    
+    /**
+     * This is only used for debugging purposes, and should be inserted into code to test.
+     * @param p
+     * @throws IOException
+     */
+    @SuppressWarnings("unused")
+    private static void listen_process(Process p) throws IOException{
+        InputStream in = p.getErrorStream();
+        int c;
+        while ((c = in.read()) != -1) {
+            if(print_cmd_output){
+                System.out.print((char) c);
+            }
+        }
+        in.close();
     }
 
     /**

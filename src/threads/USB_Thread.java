@@ -89,7 +89,7 @@ public class USB_Thread extends Parent_Thread {
                     for(String rmSong:master_song_list){
                         runtime.exec(adbExe+" shell rm /extSdCard/SongSync/Music"+rmSong).waitFor();
                     }
-                    //push the updated out file, which matches the music to not include the files we just removed
+                    //push the updated out file, which matches the music to not include the files we just removed. This overwrites existing file
                     runtime.exec(adbExe+" push SongSync_Song_List.txt /extSdCard/SongSync").waitFor();
                     
                     //for all the new songs
@@ -97,13 +97,14 @@ public class USB_Thread extends Parent_Thread {
                         try{
                             convertSong(newSong);
                             
+                            System.out.print(" Sending song.");
                             //write song to phone
-                            runtime.exec(adbExe+" push tempout"+convertMusicTo+" /extSdCard/SongSync/Music"+newSong.substring(newSong.lastIndexOf('/'))).waitFor();
+                            runtime.exec(adbExe+" push tempout"+convertMusicTo+" \"/extSdCard/SongSync/Music"+newSong+"\"").waitFor();
 
                             //append the new written song to the txt list, and push the updated list to the phone. This is slow, but allows resume from interrupts.
                             out.write(newSong+"\n");
                             out.flush();
-                            runtime.exec(adbExe+" push SongSync_Song_List.txt /extSdCard/SongSync").waitFor();
+                            runtime.exec(adbExe+" push SongSync_Song_List.txt /extSdCard/SongSync").waitFor();//TODO if this is interrupted, the file is lost.
                             
                         }catch(IOException | InterruptedException e){
                             e.printStackTrace();
@@ -148,7 +149,7 @@ public class USB_Thread extends Parent_Thread {
      * @throws InterruptedException
      */
     private void generateSongListFromMasterList(Runtime runtime, ArrayList<String> listOfSongsToAdd, ArrayList<String> master_song_list) throws IOException, InterruptedException {
-        //first copy file from phone to local
+        //first copy file from phone to local(this will create an empty file if SongSync_Song_List.txt does not exist)
         runtime.exec(adbExe+" pull /extSdCard/SongSync/SongSync_Song_List.txt SongSync_Song_List.txt").waitFor();
         //read this into memory
         BufferedReader in = new BufferedReader(new FileReader("SongSync_Song_List.txt"));
