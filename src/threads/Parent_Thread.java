@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -91,11 +92,19 @@ public class Parent_Thread extends Thread {
         else if(!convert && remux){
             ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
         }
+        //else just move to the tempout location
+        else{
+            ffmpegcmmd="Xcopy \""+song+"\" /y tempout"+convertMusicTo;
+        }
         //overwrite for user specified command
         if(ffmpegCommand!=null){
             ffmpegcmmd=ffmpegEXElocation+" "+ffmpegCommand;
         }
+        
         Runtime runtime = Runtime.getRuntime();
+        if(print_cmd_output){
+            System.out.println(ffmpegcmmd);
+        }
         Process p=runtime.exec(ffmpegcmmd);
         
         listen_process(p);
@@ -114,7 +123,8 @@ public class Parent_Thread extends Thread {
         if(!(albumArt.exists() && albumArt.isFile() && albumArt.length()>0)){
             //extract the art from the original file
             String ffmpegArtExtract=ffmpegEXElocation+" -i \""+song+"\" -an -vcodec copy -y tempalbumart.jpg";
-            listen_process(runtime.exec(ffmpegArtExtract));//.waitFor();
+            p=runtime.exec(ffmpegArtExtract);//.waitFor();
+            listen_process(p);
             
             if(p.exitValue()!=0 && p.exitValue()!=1){
                 throw new IOException("Failure in extracting album art");
@@ -124,7 +134,8 @@ public class Parent_Thread extends Thread {
         //if the song have album art, if not, just skip this
         if(albumArt.exists() && albumArt.isFile() && albumArt.length()>0){
             String ffmpegAddArt=ffmpegEXElocation+" -i tempout"+convertMusicTo+" -i tempalbumart.jpg -map 0:0 -map 1:0 -c copy -id3v2_version 3 -y tempout2"+convertMusicTo;
-            listen_process(runtime.exec(ffmpegAddArt));//.waitFor();
+            p=runtime.exec(ffmpegAddArt);//.waitFor();
+            listen_process(p);
             
             if(p.exitValue()!=0){
                 throw new IOException("Failure in adding album art");
