@@ -87,7 +87,7 @@ public class USB_Thread extends Parent_Thread {
                     
                     //out now has the the same as in, missing songs we remove. remove those now
                     for(String rmSong:master_song_list){
-                        runtime.exec(adbExe+" shell rm /extSdCard/SongSync/Music"+rmSong).waitFor();
+                        runtime.exec(adbExe+" shell rm \"/extSdCard/SongSync/Music"+rmSong+"\"").waitFor();
                     }
                     //push the updated out file, which matches the music to not include the files we just removed. This overwrites existing file
                     runtime.exec(adbExe+" push SongSync_Song_List.txt /extSdCard/SongSync/SongSync_Song_List.txt").waitFor();
@@ -124,7 +124,7 @@ public class USB_Thread extends Parent_Thread {
                             }
                             plout.close();
                             //write this file to the phone
-                            runtime.exec(adbExe+" push "+playlist.getValue0()+".m3u /extSdCard/SongSync/PlayLists/"+playlist.getValue0()+".m3u").waitFor();
+                            runtime.exec(adbExe+" push "+playlist.getValue0()+".m3u \"/extSdCard/SongSync/PlayLists/"+playlist.getValue0()+".m3u\"").waitFor();
                         }
                     }
                     
