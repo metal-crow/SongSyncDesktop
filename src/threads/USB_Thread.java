@@ -90,7 +90,7 @@ public class USB_Thread extends Parent_Thread {
                         runtime.exec(adbExe+" shell rm /extSdCard/SongSync/Music"+rmSong).waitFor();
                     }
                     //push the updated out file, which matches the music to not include the files we just removed. This overwrites existing file
-                    runtime.exec(adbExe+" push SongSync_Song_List.txt /extSdCard/SongSync").waitFor();
+                    runtime.exec(adbExe+" push SongSync_Song_List.txt /extSdCard/SongSync/SongSync_Song_List.txt").waitFor();
                     
                     //for all the new songs
                     for(String newSong:listOfSongsToAdd){
