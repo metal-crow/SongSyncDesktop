@@ -124,7 +124,7 @@ public class USB_Thread extends Parent_Thread {
                             }
                             plout.close();
                             //write this file to the phone
-                            runtime.exec(adbExe+" push "+playlist.getValue0()+".m3u /extSdCard/SongSync/PlayLists").waitFor();
+                            runtime.exec(adbExe+" push "+playlist.getValue0()+".m3u /extSdCard/SongSync/PlayLists/"+playlist.getValue0()).waitFor();
                         }
                     }
                     
