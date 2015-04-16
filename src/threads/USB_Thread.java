@@ -93,11 +93,12 @@ public class USB_Thread extends Parent_Thread {
                     runtime.exec(adbExe+" push SongSync_Song_List.txt /extSdCard/SongSync/SongSync_Song_List.txt").waitFor();
                     
                     //for all the new songs
-                    for(String newSong:listOfSongsToAdd){
+                    for(int i=0;i<listOfSongsToAdd.size();i++){
+                        String newSong=listOfSongsToAdd.get(i);
                         try{
                             convertSong(newSong);
                             
-                            System.out.print(" Sending song.");
+                            System.out.print(" Sending song. %"+((double)i/(double)listOfSongsToAdd.size()));
                             //write song to phone
                             runtime.exec(adbExe+" push tempout"+convertMusicTo+" \"/extSdCard/SongSync/Music"+newSong+"\"").waitFor();
 
