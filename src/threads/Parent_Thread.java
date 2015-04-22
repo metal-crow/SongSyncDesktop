@@ -1,9 +1,9 @@
 package threads;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -11,7 +11,9 @@ import musicPlayerInterface.iTunesInterface;
 
 
 public class Parent_Thread extends Thread {
+    //DEBUG
     private static final boolean print_cmd_output=false;
+    private static final boolean write_song_list=true;
     
     protected String musicDirectoryPath;
     protected String convertMusicTo;
@@ -184,6 +186,19 @@ public class Parent_Thread extends Thread {
                 songfilenames.add(f.getPath().substring(musicDirectoryPath.length()));
             }else{
                 generateList(songfilenames, f.getPath());
+            }
+        }
+        
+        //DEBUG in case we want the entire song list early
+        if(write_song_list){
+            try{
+                FileWriter out=new FileWriter("SongSync_Song_List.txt.dbg");
+                for(String s:songfilenames){
+                    out.write(s+"\n");
+                }
+                out.close();
+            }catch(IOException e){
+                e.printStackTrace();
             }
         }
     }
