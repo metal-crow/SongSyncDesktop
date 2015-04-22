@@ -1,8 +1,10 @@
 package threads;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -192,7 +194,7 @@ public class Parent_Thread extends Thread {
         //DEBUG in case we want the entire song list early
         if(write_song_list){
             try{
-                FileWriter out=new FileWriter("SongSync_Song_List.txt.dbg");
+                PrintWriter out=new PrintWriter(new OutputStreamWriter(new FileOutputStream("SongSync_Song_List.txt.dbg"), "utf-8"));
                 for(String s:songfilenames){
                     out.write(s+"\n");
                 }

@@ -2,10 +2,13 @@ package threads;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -83,7 +86,7 @@ public class USB_Thread extends Parent_Thread {
                 Runtime runtime = Runtime.getRuntime();
                 try {
                     generateSongListFromMasterList(runtime, listOfSongsToAdd, master_song_list);
-                    FileWriter out=new FileWriter("SongSync_Song_List.txt");
+                    PrintWriter out=new PrintWriter(new OutputStreamWriter(new FileOutputStream("SongSync_Song_List.txt"), "utf-8"));
                     
                     //out now has the the same as in, missing songs we remove. remove those now
                     for(String rmSong:master_song_list){
@@ -171,7 +174,7 @@ public class USB_Thread extends Parent_Thread {
         generateList(songs, musicDirectoryPath);
         
         //compare
-        FileWriter out=new FileWriter("SongSync_Song_List.txt.new");
+        PrintWriter out=new PrintWriter(new OutputStreamWriter(new FileOutputStream("SongSync_Song_List.txt.new"), "utf-8"));
         for(String recieve:songs){
             //android uses a / for a file delimiter and windows uses a \.
             recieve=recieve.replaceAll("\\\\", "/");
