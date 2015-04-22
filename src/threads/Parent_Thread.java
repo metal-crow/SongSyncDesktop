@@ -14,7 +14,7 @@ import musicPlayerInterface.iTunesInterface;
 
 public class Parent_Thread extends Thread {
     //DEBUG
-    private static final boolean print_cmd_output=true;
+    private static final boolean print_cmd_output=false;
     private static final boolean write_song_list=false;
     
     protected String musicDirectoryPath;
@@ -185,7 +185,9 @@ public class Parent_Thread extends Thread {
             //im just going to assume the filestucture is all music files
             if(f.isFile()){
                 //we only want the music filesystem structure path, so remove the musicDirectoryPath bit
-                songfilenames.add(f.getPath().substring(musicDirectoryPath.length()));
+                String file=f.getPath().substring(musicDirectoryPath.length());
+                file=file.replaceAll("\\\\", "/");
+                songfilenames.add(file);
             }else{
                 generateList(songfilenames, f.getPath());
             }
