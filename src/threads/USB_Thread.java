@@ -86,7 +86,7 @@ public class USB_Thread extends Parent_Thread {
                 Runtime runtime = Runtime.getRuntime();
                 try {
                     generateSongListFromMasterList(runtime, listOfSongsToAdd, master_song_list);
-                    PrintWriter out=new PrintWriter(new OutputStreamWriter(new FileOutputStream("SongSync_Song_List.txt"), "utf-8"));
+                    BufferedWriter out=new BufferedWriter(new OutputStreamWriter(new FileOutputStream("SongSync_Song_List.txt"), "utf-8"));
                     
                     //out now has the the same as in, missing songs we remove. remove those now
                     for(String rmSong:master_song_list){
