@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -13,10 +12,10 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.javatuples.Pair;
-
 import main.Desktop_Server;
 import musicPlayerInterface.iTunesInterface;
+
+import org.javatuples.Pair;
 
 
 public class USB_Thread extends Parent_Thread {
@@ -121,7 +120,7 @@ public class USB_Thread extends Parent_Thread {
                         for(Pair<String,ArrayList<String>> playlist:playlists){
                             //write this playlist to a local file
                             File playlistfile=new File(playlist.getValue0()+".m3u");
-                            BufferedWriter plout=new BufferedWriter(new FileWriter(playlistfile));
+                            BufferedWriter plout=new BufferedWriter(new OutputStreamWriter(new FileOutputStream(playlistfile), "utf-8"));
                             //write all songs in playlist
                             for(String song:playlist.getValue1()){
                                 plout.write(song+"\n");
