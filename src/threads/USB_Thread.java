@@ -215,6 +215,11 @@ public class USB_Thread extends Parent_Thread {
         new File("SongSync_Song_List.txt").delete();
         new File("tempout"+convertMusicTo).delete();
         new File("tempalbumart.jpg").delete();
+        try {
+            Runtime.getRuntime().exec("rm *.m3u");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     
     /**
