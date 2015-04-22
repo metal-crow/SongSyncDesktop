@@ -15,7 +15,7 @@ import musicPlayerInterface.iTunesInterface;
 public class Parent_Thread extends Thread {
     //DEBUG
     private static final boolean print_cmd_output=false;
-    private static final boolean write_song_list=true;
+    private static final boolean write_song_list=false;
     
     protected String musicDirectoryPath;
     protected String convertMusicTo;

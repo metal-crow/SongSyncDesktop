@@ -2,8 +2,8 @@ package threads;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -162,7 +162,7 @@ public class USB_Thread extends Parent_Thread {
         ssl.createNewFile();
         
         //read this into memory
-        BufferedReader in = new BufferedReader(new FileReader(ssl));
+        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(ssl), "utf-8"));
         while(in.ready()){
             master_song_list.add(in.readLine());
         }
@@ -174,10 +174,7 @@ public class USB_Thread extends Parent_Thread {
         
         //compare
         PrintWriter out=new PrintWriter(new OutputStreamWriter(new FileOutputStream("SongSync_Song_List.txt.new"), "utf-8"));
-        for(String recieve:songs){
-            //android uses a / for a file delimiter and windows uses a \.
-            recieve=recieve.replaceAll("\\\\", "/");
-            
+        for(String recieve:songs){            
             //for each song title, check if we already have it on the phone
             //and we are doing a normal sync
             if(master_song_list.contains(recieve) && Desktop_Server.sync_type=="N"){
