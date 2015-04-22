@@ -14,7 +14,7 @@ import musicPlayerInterface.iTunesInterface;
 
 public class Parent_Thread extends Thread {
     //DEBUG
-    private static final boolean print_cmd_output=false;
+    private static final boolean print_cmd_output=true;
     private static final boolean write_song_list=false;
     
     protected String musicDirectoryPath;
@@ -112,7 +112,7 @@ public class Parent_Thread extends Thread {
         Process p=runtime.exec(ffmpegcmmd);
         
         listen_process(p);
-        p.waitFor();
+        
         if(p.exitValue()!=0){
             throw new IOException("Failure in adding metadata");
         }
