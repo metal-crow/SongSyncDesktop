@@ -100,7 +100,7 @@ public class USB_Thread extends Parent_Thread {
                         try{
                             convertSong(newSong);
                             
-                            System.out.print(" Sending song. %"+((double)i/(double)listOfSongsToAdd.size()));
+                            System.out.print(" Sending song. %"+((double)i/(double)listOfSongsToAdd.size())*100);
                             //write song to phone
                             runtime.exec(adbExe+" push tempout"+convertMusicTo+" \"/extSdCard/SongSync/Music"+newSong+"\"").waitFor();
 
@@ -215,7 +215,7 @@ public class USB_Thread extends Parent_Thread {
         new File("tempout"+convertMusicTo).delete();
         new File("tempalbumart.jpg").delete();
         try {
-            Runtime.getRuntime().exec("rm *.m3u");
+            Runtime.getRuntime().exec("del *.m3u");
         } catch (IOException e) {
             e.printStackTrace();
         }
