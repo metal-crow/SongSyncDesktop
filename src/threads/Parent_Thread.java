@@ -14,7 +14,7 @@ import musicPlayerInterface.iTunesInterface;
 
 public class Parent_Thread extends Thread {
     //DEBUG
-    private static final boolean print_cmd_output=false;
+    private static final boolean print_cmd_output=true;
     private static final boolean write_song_list=false;
     
     protected String musicDirectoryPath;
@@ -98,7 +98,7 @@ public class Parent_Thread extends Thread {
         }
         //else just move to the tempout location
         else{
-            ffmpegcmmd="Xcopy \""+song+"\" /y tempout"+convertMusicTo;
+            ffmpegcmmd="copy \""+song.replaceAll("/", "\\")+"\" /y tempout"+convertMusicTo;
         }
         //overwrite for user specified command
         if(ffmpegCommand!=null){
@@ -149,8 +149,8 @@ public class Parent_Thread extends Thread {
             File orig=new File("tempout"+convertMusicTo);
             orig.delete();
             new File("tempout2"+convertMusicTo).renameTo(orig);
-            albumArt.delete();
         }
+        albumArt.delete();
     }
     
     /**
