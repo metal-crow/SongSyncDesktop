@@ -40,7 +40,7 @@ public class iTunesInterface {
                 String path=StringEscapeUtils.unescapeXml(line).replaceAll("%20", " ");//replace itunes escape chars
                 if(path.contains(song)){
                     songfound=true;
-                    readituneslibrary.seek(markpos);//reset back at the header and exit loop
+                    readituneslibrary.seek(markpos-1);//reset back at the header and exit loop
                 }        
             }
             //grab the library id for the path
