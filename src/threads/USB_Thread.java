@@ -113,6 +113,7 @@ public class USB_Thread extends Parent_Thread {
                             e.printStackTrace();
                             System.out.println("Conversion error for "+newSong);
                         }
+                        new File("tempout"+convertMusicTo).delete();//clean up last song
                     }
                     
                     if(useiTunesDataLibraryFile){
