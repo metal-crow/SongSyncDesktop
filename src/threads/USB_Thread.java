@@ -21,7 +21,7 @@ import org.javatuples.Pair;
 public class USB_Thread extends Parent_Thread {
 
     private String adbExe;
-    private boolean connection;
+    private boolean connection=false;
     private boolean listen=true;
     
     public USB_Thread(String adbExe, String musicDirectoryPath, String convertMusicTo,
@@ -133,13 +133,13 @@ public class USB_Thread extends Parent_Thread {
                     }
                     
                     out.close();
+                    clean_tmp();
                 } catch (IOException | InterruptedException e) {
                     System.err.println("Unrecoverable usb reading or execution error.");
                     e.printStackTrace();
                     clean_tmp();
                 }
             }
-            clean_tmp();
         }
         clean_tmp();
         System.out.println("USB listener exiting.");
