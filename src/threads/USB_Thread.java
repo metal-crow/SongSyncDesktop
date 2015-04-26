@@ -76,7 +76,7 @@ public class USB_Thread extends Parent_Thread {
             //sync
             if(newConnection && !connection){
                 connection=true;//phone is connected, dont resync
-                System.out.println("Sync Connection via USB");
+                System.out.println("Sync started via USB");
                 
                 ArrayList<String> listOfSongsToAdd=new ArrayList<String>();
                 ArrayList<String> master_song_list=new ArrayList<String>();
@@ -128,12 +128,14 @@ public class USB_Thread extends Parent_Thread {
                             }
                             plout.close();
                             //write this file to the phone
-                            runtime.exec(adbExe+" push "+playlist.getValue0()+".m3u \"/extSdCard/SongSync/PlayLists/"+playlist.getValue0()+".m3u\"").waitFor();
+                            runtime.exec(adbExe+" push \""+playlist.getValue0()+".m3u\" \"/extSdCard/SongSync/PlayLists/"+playlist.getValue0()+".m3u\"").waitFor();
+                            playlistfile.delete();
                         }
                     }
                     
                     out.close();
                     clean_tmp();
+                    System.out.println("USB sync finished");
                 } catch (IOException | InterruptedException e) {
                     System.err.println("Unrecoverable usb reading or execution error.");
                     e.printStackTrace();
