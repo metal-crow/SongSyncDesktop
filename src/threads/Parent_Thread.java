@@ -158,7 +158,6 @@ public class Parent_Thread extends Thread {
      * @param p
      * @throws IOException
      */
-    @SuppressWarnings("unused")
     private static void listen_process(Process p) throws IOException{
         InputStream in = p.getErrorStream();
         int c;

@@ -2,13 +2,13 @@
 #Relaunch SongSync anytime you make changes to load the updates.
 
 #the path to your music directory [Force FullResync]
-musicDirectoryPath=E:/iTunes/iTunes Media/Music
+musicDirectoryPath=Testing Library/Music
 
 #the location of your ffmpeg exe or the command to run in terminal to use ffmpeg
 ffmpegEXElocation=ffmpeg.exe
 
 #the location of your itunes library file if using itunes [Force FullResync][optional]
-iTunesDataLibraryFile=E:/iTunes/iTunes Library.xml
+iTunesDataLibraryFile=Testing Library/iTunes Library.xml
 
 #the file extension to convert a song to. Leave blank for no conversion. [Force FullResync][optional]
 ConvertSongsTo=.mp3

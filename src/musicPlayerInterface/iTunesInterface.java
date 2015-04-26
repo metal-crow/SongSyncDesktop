@@ -12,6 +12,32 @@ import org.javatuples.Pair;
 
 
 public class iTunesInterface {
+    
+    /**
+     * I want to read a single line of utf chars via a RandomAccessFile. No, not going to make an entire wrapper class just for this
+     * @param in
+     * @return
+     * @throws IOException 
+     */
+    private static String readLineUTF(RandomAccessFile in) throws IOException{
+        long startingps=in.getFilePointer();
+        //find how long the line is
+        String asciiline=in.readLine();
+        if(asciiline!=null){
+            asciiline+='\n';//include \n, which is discarded, but i need correct byte length
+            int bytecount=asciiline.getBytes("US-ASCII").length+1;
+            //read that # bytes
+            byte[] byteline=new byte[bytecount];
+            in.seek(startingps);
+            in.read(byteline);
+            //convert byte array to utf string
+            String read=new String(byteline,"UTF8");
+            return read;
+        }else{
+            //EOF
+            return null;
+        }
+    }
 
     /**
      * If using the itunes library, every song must have itunes metadata manually added to it because the user may have added metatdata to itunes. Same with album art.
@@ -28,7 +54,7 @@ public class iTunesInterface {
         boolean songfound=false;
         String Library_Persistent_ID="";
         long markpos = -1;
-        String line = readituneslibrary.readUTF();
+        String line = readLineUTF(readituneslibrary);
         while(!songfound && line!=null){
             //read each segment of data in the library, marking the start.
             //because we cannot tell at the head of the segment if this is our song, we need to mark to return if we find it is
@@ -38,7 +64,8 @@ public class iTunesInterface {
             else if(line.contains("<key>Location</key>")){
                 //this value will tell us if this header is our song
                 String path=StringEscapeUtils.unescapeXml(line).replaceAll("%20", " ");//replace itunes escape chars
-                if(path.contains(song)){
+                //have to go to lower case in case filename is lowercase but itunes has it uppercase  
+                if(path.toLowerCase().contains(song.toLowerCase())){
                     songfound=true;
                     readituneslibrary.seek(markpos-1);//reset back at the header and exit loop
                 }        
@@ -47,7 +74,7 @@ public class iTunesInterface {
             if(line.contains("<key>Library Persistent ID</key>")){
                 Library_Persistent_ID=line.substring(line.indexOf("<string>")+8, line.indexOf("</string>"));
             }
-            line=readituneslibrary.readUTF();
+            line=readLineUTF(readituneslibrary);
         }
         
         //now scan the header for the metadata
@@ -57,7 +84,7 @@ public class iTunesInterface {
             String metadataline="";
             boolean endofsongmetadata=false;
             while(!endofsongmetadata){
-                metadataline=StringEscapeUtils.unescapeXml(readituneslibrary.readUTF());
+                metadataline=StringEscapeUtils.unescapeXml(readLineUTF(readituneslibrary));
                 
                 if(metadataline.contains("<key>Name</key>")){
                     metadata.append("-metadata title=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>"))+"\" ");
@@ -110,7 +137,7 @@ public class iTunesInterface {
         String line="";
         //wait until we get to the playlist section
         while(!line.contains("<key>Playlists</key>")){
-            line=readituneslibrary.readUTF();
+            line=readLineUTF(readituneslibrary);
         }
         
         //now that we are in the playlist section, we can search by <key>Name</key>, which is the same identifier as used in songs, so we had to wait until after the song section
@@ -118,7 +145,7 @@ public class iTunesInterface {
         while(line!=null){//read till end of file
             //reread if this line isnt the header of a new playlist or it is a header but it is the playlist Music or Library 
             while(line!=null && (!line.contains("<key>Name</key><string>") || line.contains("<key>Name</key><string>Music</string>") || line.contains("<key>Name</key><string>Library</string>"))){
-                line=readituneslibrary.readUTF();
+                line=readLineUTF(readituneslibrary);
             }
             
             if(line!=null){
@@ -129,7 +156,7 @@ public class iTunesInterface {
                 
                 //read all the track ids and put them in the corresponding array list
                 while(!line.contains("</array>")){
-                    line=readituneslibrary.readUTF();
+                    line=readLineUTF(readituneslibrary);
                     if(line.contains("<key>Track ID</key><integer>")){
                         playlistTracks.add(line.substring(line.indexOf("<integer>")+9, line.indexOf("</integer>")));
                     }
@@ -144,7 +171,7 @@ public class iTunesInterface {
         readituneslibrary.seek(0);
         line="";//since we reach the end of the file in the last block, change this from null
         while(line!=null && !line.contains("<key>Playlists</key>")){//make sure we dont overshoot to reading playlists
-            line=readituneslibrary.readUTF();
+            line=readLineUTF(readituneslibrary);
             /*search through the arraylist for an id we find instead of searching the file for an id we want because
              * a) scanning through array is faster than reading file
              * b) the id can appear multiple times in the arrays (shared song between playlists) but only once in the file (unique id per song)
@@ -153,7 +180,7 @@ public class iTunesInterface {
                 String track_id=line.substring(line.indexOf("<integer>")+9, line.indexOf("</integer>"));
                 //read ahead till the location key
                 while(!line.contains("<key>Location</key><string>")){
-                    line=readituneslibrary.readUTF();
+                    line=readLineUTF(readituneslibrary);
                 }
                 //get location in a format that ignores the parent directory, i.e will match directory on phone
                 String location=line.substring(line.indexOf("<string>")+8, line.indexOf("</string>"));
