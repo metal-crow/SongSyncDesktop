@@ -115,7 +115,12 @@ public class USB_Thread extends Parent_Thread {
                         }
                         new File("tempout"+convertMusicTo).delete();//clean up last song
                     }
-                    
+                    //finished sending songs
+                    out.close();
+                    new File("SongSync_Song_List.txt").delete();
+                    new File("tempout"+convertMusicTo).delete();
+
+                    //blindly overwrite playlists
                     if(useiTunesDataLibraryFile){
                         ArrayList<Pair<String, ArrayList<String>>> playlists=iTunesInterface.generateM3UPlaylists(readituneslibrary);
                         for(Pair<String,ArrayList<String>> playlist:playlists){
@@ -133,7 +138,6 @@ public class USB_Thread extends Parent_Thread {
                         }
                     }
                     
-                    out.close();
                     clean_tmp();
                     System.out.println("USB sync finished");
                 } catch (IOException | InterruptedException e) {
