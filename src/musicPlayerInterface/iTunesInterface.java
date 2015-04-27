@@ -6,6 +6,10 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.javatuples.Pair;
@@ -31,7 +35,19 @@ public class iTunesInterface {
             in.seek(startingps);
             in.read(byteline);
             //convert byte array to utf string
-            String read=new String(byteline,"UTF8");
+            String read=new String(byteline,"UTF8").replaceAll("%20", " ");//handle escape char for space
+            
+            //itunes uses some weird unicode escaping,handle it here
+            Pattern p = Pattern.compile("%[0-9A-Z]{2}%[0-9A-Z]{2}%[0-9A-Z]{2}");
+            Matcher m = p.matcher(read);
+            while(m.find()){
+                //string containing only hex chars
+                String escaped=m.group();
+                //convert hex to byte representation
+                byte[] unicodebytes=DatatypeConverter.parseHexBinary(escaped.replaceAll("%", ""));
+                //read bytes at utf
+                read=read.replace(escaped, new String(unicodebytes,"UTF8"));
+            }
             return read;
         }else{
             //EOF
@@ -63,7 +79,7 @@ public class iTunesInterface {
             }
             else if(line.contains("<key>Location</key>")){
                 //this value will tell us if this header is our song
-                String path=StringEscapeUtils.unescapeXml(line).replaceAll("%20", " ");//replace itunes escape chars
+                String path=StringEscapeUtils.unescapeXml(line);//replace itunes escape chars
                 //have to go to lower case in case filename is lowercase but itunes has it uppercase  
                 if(path.toLowerCase().contains(song.toLowerCase())){
                     songfound=true;
@@ -184,7 +200,7 @@ public class iTunesInterface {
                 }
                 //get location in a format that ignores the parent directory, i.e will match directory on phone
                 String location=line.substring(line.indexOf("<string>")+8, line.indexOf("</string>"));
-                location=StringEscapeUtils.unescapeXml(location).replaceAll("%20", " ");
+                location=StringEscapeUtils.unescapeXml(location);
                 location=location.substring(location.indexOf("/iTunes Media/Music/")+20);
                 
                 //go through all the arrays for the track id

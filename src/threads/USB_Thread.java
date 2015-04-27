@@ -124,6 +124,7 @@ public class USB_Thread extends Parent_Thread {
                     if(useiTunesDataLibraryFile){
                         ArrayList<Pair<String, ArrayList<String>>> playlists=iTunesInterface.generateM3UPlaylists(readituneslibrary);
                         for(Pair<String,ArrayList<String>> playlist:playlists){
+                            System.out.println("Sending playlist "+playlist.getValue0());
                             //write this playlist to a local file
                             File playlistfile=new File(playlist.getValue0()+".m3u");
                             BufferedWriter plout=new BufferedWriter(new OutputStreamWriter(new FileOutputStream(playlistfile), "utf-8"));
