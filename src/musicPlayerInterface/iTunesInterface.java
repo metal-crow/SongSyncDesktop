@@ -103,16 +103,16 @@ public class iTunesInterface {
                 metadataline=StringEscapeUtils.unescapeXml(readLineUTF(readituneslibrary));
                 
                 if(metadataline.contains("<key>Name</key>")){
-                    metadata.append("-metadata title=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>"))+"\" ");
+                    metadata.append("-metadata title=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>")).replaceAll("\"", "\\\\\"")+"\" ");
                 }
                 else if(metadataline.contains("<key>Artist</key>")){
-                    metadata.append("-metadata artist=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>"))+"\" ");
+                    metadata.append("-metadata artist=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>")).replaceAll("\"", "\\\\\"")+"\" ");
                 }
                 else if(metadataline.contains("<key>Album</key>")){
-                    metadata.append("-metadata album=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>"))+"\" ");
+                    metadata.append("-metadata album=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>")).replaceAll("\"", "\\\\\"")+"\" ");
                 }
                 else if(metadataline.contains("<key>Genre</key>")){
-                    metadata.append("-metadata genre=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>"))+"\" ");
+                    metadata.append("-metadata genre=\""+metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>")).replaceAll("\"", "\\\\\"")+"\" ");
                 }
                 else if(metadataline.contains("<key>Persistent ID</key>")){
                     String albumartlocation=metadataline.substring(metadataline.indexOf("<string>")+8, metadataline.indexOf("</string>"));
