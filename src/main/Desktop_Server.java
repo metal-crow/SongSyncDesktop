@@ -104,9 +104,11 @@ public class Desktop_Server {
         //older ini file copy to check for changes. Read simultaneously, and when w read data check if it differs on old one.
         BufferedReader chk_tmp_initfileparams=new BufferedReader(new FileReader(inifile_check));
 
-        String line=initfileparams.readLine();
-        String tmp_line=chk_tmp_initfileparams.readLine();
+        String line=initfileparams.readLine().replaceAll("\\\\", "/");
+        String tmp_line=chk_tmp_initfileparams.readLine().replaceAll("\\\\", "/");
         while(line!=null){
+            line=line.replaceAll("\\\\", "/");
+            tmp_line=tmp_line.replaceAll("\\\\", "/");
             if(!line.contains("#")){
                 if(line.toLowerCase().contains("musicdirectorypath")){
                     musicDirectoryPath=line.substring(19);
