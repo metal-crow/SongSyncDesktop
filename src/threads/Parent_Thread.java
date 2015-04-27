@@ -50,7 +50,7 @@ public class Parent_Thread extends Thread {
      */
     protected String convertSong(String request) throws IOException, InterruptedException {
         String songpath=musicDirectoryPath+request;
-        System.out.print("\nGot request for "+request);
+        System.out.print("Got request for "+request);
         
         //find the songs filetype, and convert it if it needs to be converted
         String filetype=songpath.substring(songpath.lastIndexOf("."));
