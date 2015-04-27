@@ -100,7 +100,7 @@ public class USB_Thread extends Parent_Thread {
                         try{
                             convertSong(newSong);
                             
-                            System.out.print(" Sending song. %"+((double)i/(double)listOfSongsToAdd.size())*100);
+                            System.out.print(" Sending song. %"+((double)(i+1)/(double)listOfSongsToAdd.size())*100);
                             //write song to phone
                             runtime.exec(adbExe+" push tempout"+convertMusicTo+" \"/extSdCard/SongSync/Music"+newSong+"\"").waitFor();
 
