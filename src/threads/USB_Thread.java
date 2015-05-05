@@ -88,6 +88,7 @@ public class USB_Thread extends Parent_Thread {
                         removeSong(song);
                     }
                     del_in.close();
+                    new File("SongSync_Delete_Song_List.txt").delete();
                     //remove this file from phone to mark that songs have been removed
                     runtime.exec(adbExe+" shell rm /extSdCard/SongSync/SongSync_Delete_Song_List.txt").waitFor();
                 } catch (IOException | InterruptedException e1) {
