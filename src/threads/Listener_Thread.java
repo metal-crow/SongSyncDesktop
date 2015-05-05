@@ -89,6 +89,8 @@ public class Listener_Thread extends Parent_Thread {
                         try{
                             String songpath=convertSong(request);
                             sendSong(songpath, out, pout, in);
+                            //clean up tmp file
+                            new File(songpath).delete();
                         }catch(IOException | InterruptedException e){
                             e.printStackTrace();
                             System.out.println("Converion failure for "+request);
