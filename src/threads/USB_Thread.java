@@ -78,11 +78,27 @@ public class USB_Thread extends Parent_Thread {
                 connection=true;//phone is connected, dont resync
                 System.out.println("Sync started via USB");
                 
+                //recieve and remove the songs the phone wants to delete
+                Runtime runtime = Runtime.getRuntime();
+                try {
+                    runtime.exec(adbExe+" pull /extSdCard/SongSync/SongSync_Delete_Song_List.txt SongSync_Delete_Song_List.txt").waitFor();
+                    BufferedReader del_in = new BufferedReader(new InputStreamReader(new FileInputStream("SongSync_Delete_Song_List.txt"), "utf-8"));
+                    while(del_in.ready()){
+                        String song=del_in.readLine();
+                        removeSong(song);
+                    }
+                    del_in.close();
+                    //remove this file from phone to mark that songs have been removed
+                    runtime.exec(adbExe+" shell rm /extSdCard/SongSync/SongSync_Delete_Song_List.txt").waitFor();
+                } catch (IOException | InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+
+                
                 ArrayList<String> listOfSongsToAdd=new ArrayList<String>();
                 ArrayList<String> master_song_list=new ArrayList<String>();
 
                 //get list of songs the phone has
-                Runtime runtime = Runtime.getRuntime();
                 try {
                     generateSongListFromMasterList(runtime, listOfSongsToAdd, master_song_list);
                     BufferedWriter out=new BufferedWriter(new OutputStreamWriter(new FileOutputStream("SongSync_Song_List.txt",true), "utf-8"));

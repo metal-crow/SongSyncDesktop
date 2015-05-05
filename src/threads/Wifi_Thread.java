@@ -58,6 +58,13 @@ public class Wifi_Thread extends Parent_Thread {
                     PrintWriter out=new PrintWriter(new OutputStreamWriter(phone.getOutputStream(), "utf-8"), true);//writer for song names/length
                     BufferedReader in=new BufferedReader(new InputStreamReader(phone.getInputStream(), "utf-8"));//listener for phone requests/info
                     BufferedOutputStream pout=new BufferedOutputStream(phone.getOutputStream());//writer for the song bytes
+                    
+                    //recieve all the songs the phone wants to delete
+                    String song_to_delete=in.readLine();
+                    while(song_to_delete!=null && !song_to_delete.equals("END OF SONG DELETIONS")){
+                        removeSong(song_to_delete);
+                        song_to_delete=in.readLine();
+                    }
     
                     //write out sync type(normal "N", full resync "R")
                     out.println(Desktop_Server.sync_type);

@@ -42,6 +42,19 @@ public class Parent_Thread extends Thread {
     }
     
     /**
+     * Remove song from local music file system
+     * @param song
+     */
+    protected void removeSong(String song){
+        System.out.println("Song "+song+"being removed from music database.");
+        File song_to_delete=new File(musicDirectoryPath+song);
+        boolean deleted=song_to_delete.delete();
+        if(!deleted){
+            System.err.println("Error deleting song "+song);
+        }
+    }
+    
+    /**
      * Given song location, check if needs to be converted, convert, point to converted/song location
      * @param request
      * @return
