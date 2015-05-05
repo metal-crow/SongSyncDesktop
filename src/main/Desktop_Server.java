@@ -10,8 +10,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Scanner;
 
-import threads.USB_Thread;
-import threads.Wifi_Thread;
+import threads.Listener_Thread;
 
 
 public class Desktop_Server {
@@ -53,35 +52,29 @@ public class Desktop_Server {
             }
         }
         
-        //start wifi connection listener thread
-        Wifi_Thread wifi=new Wifi_Thread(musicDirectoryPath,convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile, ffmpegEXElocation, ffmpegCommand, codecs);
-        wifi.start();
-        //start usb connection listener thread
-        USB_Thread usb=new USB_Thread(adbExe,musicDirectoryPath,convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile, ffmpegEXElocation, ffmpegCommand, codecs);
+        //start the connection listener thread
+        Listener_Thread listener=new Listener_Thread(musicDirectoryPath,convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile, ffmpegEXElocation, ffmpegCommand, codecs);
+        listener.start();
+        //reverse port to allow local connection via usb
+        //connections to localhost on the device will be forwarded to localhost on the host
         if(!adbExe.isEmpty()){
-            usb.start();
+            Runtime.getRuntime().exec(adbExe+" reverse tcp:9091 tcp:9091");
         }
         
         //listen for user command to end server
         String userend="";
         Scanner in=new Scanner(System.in);
-        if(!adbExe.isEmpty()){
-            System.out.println("Type 'c' to force a wired sync, 'end' to end the server.");
-        }else{
-            System.out.println("Type 'end' to end the server.");
-        }
+        System.out.println("Type 'end' to end the server.");
         while(listen){
             userend=in.next();
             if(userend.equalsIgnoreCase("end")){
                 listen=false;
-                wifi.stop_connection();
-                usb.stop_connection();
-            }else if(userend.equalsIgnoreCase("c") && !adbExe.isEmpty()){
-                usb.try_force_connection();
+                listener.stop_connection();
             }
         }
         
         System.out.println("Exiting");
+        Runtime.getRuntime().exec(adbExe+" reverse --remove tcp:9091");
         in.close();
         readituneslibrary.close();
     }

@@ -21,11 +21,11 @@ import musicPlayerInterface.iTunesInterface;
 import org.javatuples.Pair;
 
 
-public class Wifi_Thread extends Parent_Thread {
+public class Listener_Thread extends Parent_Thread {
     private ServerSocket androidConnection;
     private boolean listen=true;
     
-    public Wifi_Thread(String musicDirectoryPath, String convertMusicTo,
+    public Listener_Thread(String musicDirectoryPath, String convertMusicTo,
             boolean useiTunesDataLibraryFile,
             RandomAccessFile readituneslibrary, String iTunesDataLibraryFile,
             String ffmpegEXElocation, String ffmpegCommand,
@@ -130,6 +130,7 @@ public class Wifi_Thread extends Parent_Thread {
             
         }catch(SocketException e){
             System.out.println("Wifi Thread closed.");
+            e.printStackTrace();
         }catch(Exception e){
             System.err.println("Unrecoverable network/file io error.");
             e.printStackTrace();
