@@ -53,7 +53,7 @@ public class Listener_Thread extends Parent_Thread {
             while(listen){
                 try{
                     Socket phone = androidConnection.accept();
-                    System.out.println("Sync Connection via WiFi.");
+                    System.out.println("Sync Connection Recived.");
                     
                     PrintWriter out=new PrintWriter(new OutputStreamWriter(phone.getOutputStream(), "utf-8"), true);//writer for song names/length
                     BufferedReader in=new BufferedReader(new InputStreamReader(phone.getInputStream(), "utf-8"));//listener for phone requests/info
