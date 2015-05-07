@@ -99,11 +99,11 @@ public class Parent_Thread extends Thread {
         
         //convert the file and remux
         if(convert && remux){
-            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec "+codecs.get(convertMusicTo)+" -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
+            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -q:a 0 -acodec "+codecs.get(convertMusicTo)+" -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
         }
         //only convert
         else if(convert && !remux){
-            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -ab 320000 -acodec "+codecs.get(convertMusicTo)+"-y tempout"+convertMusicTo;
+            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -q:a 0 -acodec "+codecs.get(convertMusicTo)+"-y tempout"+convertMusicTo;
         }
         //only remux
         else if(!convert && remux){
