@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
 import java.util.Scanner;
 
 import threads.Listener_Thread;
@@ -23,11 +22,6 @@ public class Desktop_Server {
     private static String adbExe;
     private static boolean listen=true;//thread's listen to know when to end
     public volatile static String sync_type="N";//what type of sync we're doing. Need threads to be able to edit
-    //map codes to file extensions
-    private static HashMap<String,String> codecs=new HashMap<String,String>();
-    static{
-        codecs.put(".mp3", "libmp3lame");
-    }
     
     public static void main(String[] args) throws IOException {
         //load params from ini file
@@ -53,7 +47,7 @@ public class Desktop_Server {
         }
         
         //start the connection listener thread
-        Listener_Thread listener=new Listener_Thread(musicDirectoryPath,convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile, ffmpegEXElocation, ffmpegCommand, codecs);
+        Listener_Thread listener=new Listener_Thread(musicDirectoryPath,convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile, ffmpegEXElocation, ffmpegCommand);
         listener.start();
         //reverse port to allow local connection via usb
         //connections to localhost on the device will be forwarded to localhost on the host

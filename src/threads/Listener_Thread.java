@@ -13,7 +13,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import main.Desktop_Server;
 import musicPlayerInterface.iTunesInterface;
@@ -28,18 +27,18 @@ public class Listener_Thread extends Parent_Thread {
     public Listener_Thread(String musicDirectoryPath, String convertMusicTo,
             boolean useiTunesDataLibraryFile,
             RandomAccessFile readituneslibrary, String iTunesDataLibraryFile,
-            String ffmpegEXElocation, String ffmpegCommand,
-            HashMap<String, String> codecs) {
-        super(musicDirectoryPath, convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile, ffmpegEXElocation, ffmpegCommand, codecs);
+            String ffmpegEXElocation, String ffmpegCommand) {
+        super(musicDirectoryPath, convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile, ffmpegEXElocation, ffmpegCommand);
     }
     
     public void stop_connection(){
+        listen=false;
+        this.interrupt();
         try {
             androidConnection.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        listen=false;
     }
 
     @Override

@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import musicPlayerInterface.iTunesInterface;
 
@@ -24,13 +23,11 @@ public class Parent_Thread extends Thread {
     private String iTunesDataLibraryFile;
     private String ffmpegEXElocation;
     private String ffmpegCommand;
-    private HashMap<String,String> codecs;
     
     public Parent_Thread(String musicDirectoryPath, String convertMusicTo,
             boolean useiTunesDataLibraryFile,
             RandomAccessFile readituneslibrary, String iTunesDataLibraryFile,
-            String ffmpegEXElocation, String ffmpegCommand,
-            HashMap<String, String> codecs) {
+            String ffmpegEXElocation, String ffmpegCommand) {
         this.musicDirectoryPath = musicDirectoryPath;
         this.convertMusicTo = convertMusicTo;
         this.useiTunesDataLibraryFile = useiTunesDataLibraryFile;
@@ -38,7 +35,6 @@ public class Parent_Thread extends Thread {
         this.iTunesDataLibraryFile = iTunesDataLibraryFile;
         this.ffmpegEXElocation = ffmpegEXElocation;
         this.ffmpegCommand = ffmpegCommand;
-        this.codecs = codecs;
     }
     
     /**
@@ -99,11 +95,11 @@ public class Parent_Thread extends Thread {
         
         //convert the file and remux
         if(convert && remux){
-            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -q:a 0 -acodec "+codecs.get(convertMusicTo)+" -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
+            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -q:a 0 -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
         }
         //only convert
         else if(convert && !remux){
-            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -q:a 0 -acodec "+codecs.get(convertMusicTo)+"-y tempout"+convertMusicTo;
+            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -q:a 0 -y tempout"+convertMusicTo;
         }
         //only remux
         else if(!convert && remux){
