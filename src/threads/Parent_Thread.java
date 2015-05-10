@@ -103,7 +103,7 @@ public class Parent_Thread extends Thread {
         }
         //only remux
         else if(!convert && remux){
-            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
+            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -acodec copy -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
         }
         //else just move to the tempout location
         else{
