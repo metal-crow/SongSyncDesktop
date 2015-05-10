@@ -58,12 +58,16 @@ public class Desktop_Server {
         //listen for user command to end server
         String userend="";
         Scanner in=new Scanner(System.in);
-        System.out.println("Type 'end' to end the server.");
+        System.out.println("Type 'end' to end the server. Type 'R' to force a full resync, 'N' for a normal sync.");
         while(listen){
             userend=in.next();
             if(userend.equalsIgnoreCase("end")){
                 listen=false;
                 listener.stop_connection();
+            }else if(userend.equalsIgnoreCase("R")){
+                sync_type="R";
+            }else if(userend.equalsIgnoreCase("N")){
+                sync_type="N";
             }
         }
         
