@@ -109,7 +109,7 @@ public class Parent_Thread extends Thread {
                     }
                     filetype.append((char)c);
                 }
-                //follow mark is its detected
+                //follow mark if its detected
                 else if(mark.charAt(mark_i)==(char)c){
                     mark_i++;
                 }
