@@ -88,8 +88,40 @@ public class Parent_Thread extends Thread {
      */
     protected void conversion(String song, String metadata) throws IOException, InterruptedException {
         String ffmpegcmmd = null;
-        //if the song isn't native filetype, we need to convert it
+        Runtime runtime = Runtime.getRuntime();
+
+        //if the song isn't native filetype, we need to convert it(guaranteed different filetype is different encoding)
         boolean convert=!song.substring(song.lastIndexOf('.')).equals(convertMusicTo);
+        //cant rely on file extension for audio encoding, need to check(same filetype is no guarantee of same encoding)
+        if(!convert){
+            Process p=runtime.exec(ffmpegEXElocation+" -i \""+song+"\"");
+            InputStream in = p.getErrorStream();
+            String mark="Stream #0:0: Audio: ";
+            StringBuilder filetype=new StringBuilder();
+            int c;
+            int mark_i=0;
+            while ((c = in.read()) != -1) {
+                //store on mark completion
+                if(mark_i==mark.length()){
+                    //break at indicated end
+                    if((char)c==','){
+                        break;
+                    }
+                    filetype.append((char)c);
+                }
+                //follow mark is its detetced
+                else if(mark.charAt(mark_i)==(char)c){
+                    mark_i++;
+                }
+                //reset if mark broken
+                else{
+                    mark_i=0;
+                }
+            }
+            in.close();
+            
+            convert=!filetype.toString().equals(convertMusicTo.substring(1));
+        }
         //if we are using itunes, we need to remux file with metadata
         boolean remux=!metadata.equals("");
         
@@ -103,7 +135,7 @@ public class Parent_Thread extends Thread {
         }
         //only remux
         else if(!convert && remux){
-            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -acodec copy -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
+            ffmpegcmmd=ffmpegEXElocation+" -i \""+song+"\" -c copy -id3v2_version 3 -map_metadata 0 "+metadata+"-y tempout"+convertMusicTo;
         }
         //else just move to the tempout location
         else{
@@ -114,7 +146,6 @@ public class Parent_Thread extends Thread {
             ffmpegcmmd=ffmpegEXElocation+" "+ffmpegCommand;
         }
         
-        Runtime runtime = Runtime.getRuntime();
         if(print_cmd_output){
             System.out.println(ffmpegcmmd);
         }
