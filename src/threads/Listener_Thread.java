@@ -11,7 +11,6 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.ArrayList;
 
 import main.Desktop_Server;
@@ -33,7 +32,6 @@ public class Listener_Thread extends Parent_Thread {
     
     public void stop_connection(){
         listen=false;
-        this.interrupt();
         try {
             androidConnection.close();
         } catch (IOException e) {
@@ -47,94 +45,94 @@ public class Listener_Thread extends Parent_Thread {
             //open server socket
             androidConnection=new ServerSocket(9091);
             System.out.println("Listening on port "+androidConnection.getLocalPort()+" at host "+androidConnection.getInetAddress().getHostName());
-            
-            //loop and listen for connection
-            while(listen){
-                try{
-                    Socket phone = androidConnection.accept();
-                    System.out.println("Sync Connection Recived.");
-                    
-                    PrintWriter out=new PrintWriter(new OutputStreamWriter(phone.getOutputStream(), "utf-8"), true);//writer for song names/length
-                    BufferedReader in=new BufferedReader(new InputStreamReader(phone.getInputStream(), "utf-8"));//listener for phone requests/info
-                    BufferedOutputStream pout=new BufferedOutputStream(phone.getOutputStream());//writer for the song bytes
-                    
-                    //recieve all the songs the phone wants to delete
-                    String song_to_delete=in.readLine();
-                    while(song_to_delete!=null && !song_to_delete.equals("END OF SONG DELETIONS")){
-                        removeSong(song_to_delete);
-                        song_to_delete=in.readLine();
+        }catch(IOException e){
+            System.out.println("Socket Creation Failure.");
+            e.printStackTrace();
+            listen=false;
+            return;
+        }
+        
+        //loop and listen for connection
+        while(listen){
+            try{
+                Socket phone = androidConnection.accept();
+                System.out.println("Sync Connection Recived.");
+                
+                PrintWriter out=new PrintWriter(new OutputStreamWriter(phone.getOutputStream(), "utf-8"), true);//writer for song names/length
+                BufferedReader in=new BufferedReader(new InputStreamReader(phone.getInputStream(), "utf-8"));//listener for phone requests/info
+                BufferedOutputStream pout=new BufferedOutputStream(phone.getOutputStream());//writer for the song bytes
+                
+                //recieve all the songs the phone wants to delete
+                String song_to_delete=in.readLine();
+                while(song_to_delete!=null && !song_to_delete.equals("END OF SONG DELETIONS")){
+                    removeSong(song_to_delete);
+                    song_to_delete=in.readLine();
+                }
+
+                //write out sync type(normal "N", full resync "R")
+                out.println(Desktop_Server.sync_type);
+                Desktop_Server.sync_type="N";//change back sync type to normal, now that we've done a full resync
+                
+                //generate the list of all songs
+                ArrayList<String> songs=new ArrayList<String>();
+                generateList(songs, musicDirectoryPath);
+                //write the filetype of the songs
+                out.println(convertMusicTo);
+                //write out all songs
+                for(String song:songs){
+                    out.println(song);
+                }
+                //tell phone done writing song list
+                out.println("ENDOFLIST");
+                songs=null;//gc this, huge list of strings that we no longer need
+                
+                //recieve the request list from the phone and send over each song per request
+                String request=in.readLine();
+                while(request!=null && !request.equals("END OF SONG DOWNLOADS")){
+                    try{
+                        String songpath=convertSong(request);
+                        sendSong(songpath, out, pout, in);
+                        //clean up tmp file
+                        new File(songpath).delete();
+                    }catch(IOException | InterruptedException e){
+                        e.printStackTrace();
+                        System.out.println("Converion failure for "+request);
                     }
-    
-                    //write out sync type(normal "N", full resync "R")
-                    out.println(Desktop_Server.sync_type);
-                    Desktop_Server.sync_type="N";//change back sync type to normal, now that we've done a full resync
-                    
-                    //generate the list of all songs
-                    ArrayList<String> songs=new ArrayList<String>();
-                    generateList(songs, musicDirectoryPath);
-                    //write the filetype of the songs
-                    out.println(convertMusicTo);
-                    //write out all songs
-                    for(String song:songs){
-                        out.println(song);
-                    }
-                    //tell phone done writing song list
-                    out.println("ENDOFLIST");
-                    songs=null;//gc this, huge list of strings that we no longer need
-                    
-                    //recieve the request list from the phone and send over each song per request
-                    String request=in.readLine();
-                    while(request!=null && !request.equals("END OF SONG DOWNLOADS")){
-                        try{
-                            String songpath=convertSong(request);
-                            sendSong(songpath, out, pout, in);
-                            //clean up tmp file
-                            new File(songpath).delete();
-                        }catch(IOException | InterruptedException e){
-                            e.printStackTrace();
-                            System.out.println("Converion failure for "+request);
+                    request=in.readLine();
+                }
+                
+                //send over the playlists
+                /* Sending Protocol:
+                 * "NEW LIST" (except for 1st sent list)
+                 * playlist name
+                 * all songs
+                 * repeat
+                 * "NO MORE PLAYLISTS"
+                 */
+                if(useiTunesDataLibraryFile){
+                    ArrayList<Pair<String, ArrayList<String>>> playlists=iTunesInterface.generateM3UPlaylists(readituneslibrary);
+                    for(Pair<String,ArrayList<String>> playlist:playlists){
+                        out.println(playlist.getValue0());//write playlist name
+                        //write all songs in playlist
+                        for(String song:playlist.getValue1()){
+                            out.println(song);
                         }
-                        request=in.readLine();
+                        out.println("NEW LIST");
                     }
-                    
-                    //send over the playlists
-                    /* Sending Protocol:
-                     * "NEW LIST" (except for 1st sent list)
-                     * playlist name
-                     * all songs
-                     * repeat
-                     * "NO MORE PLAYLISTS"
-                     */
-                    if(useiTunesDataLibraryFile){
-                        ArrayList<Pair<String, ArrayList<String>>> playlists=iTunesInterface.generateM3UPlaylists(readituneslibrary);
-                        for(Pair<String,ArrayList<String>> playlist:playlists){
-                            out.println(playlist.getValue0());//write playlist name
-                            //write all songs in playlist
-                            for(String song:playlist.getValue1()){
-                                out.println(song);
-                            }
-                            out.println("NEW LIST");
-                        }
-                    }
-                    out.println("NO MORE PLAYLISTS");
-                    
-                    out.close();
-                    in.close();
-                    pout.close();       
-                    phone.close();
-                    System.out.println("Sync finished");
-                }catch(Exception e){
+                }
+                out.println("NO MORE PLAYLISTS");
+                
+                out.close();
+                in.close();
+                pout.close();       
+                phone.close();
+                System.out.println("Sync finished");
+            }catch(Exception e){
+                if(listen){
                     System.err.println("Unrecoverable network/file io error.");
                     e.printStackTrace();
                 }
             }
-            
-        }catch(SocketException e){
-            System.out.println("Wifi Thread closed.");
-            e.printStackTrace();
-        }catch(Exception e){
-            System.err.println("Unrecoverable network/file io error.");
-            e.printStackTrace();
         }
     }
 
