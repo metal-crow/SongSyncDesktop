@@ -1,4 +1,5 @@
 package main;
+import java.awt.AWTException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,10 +21,12 @@ public class Desktop_Server {
     private static String convertMusicTo;
     private static String ffmpegCommand;
     private static String adbExe;
-    private static boolean listen=true;//thread's listen to know when to end
+    public static volatile boolean listen=true;
     public volatile static String sync_type="N";//what type of sync we're doing. Need threads to be able to edit
+    private static RandomAccessFile readituneslibrary;
     
-    public static void main(String[] args) throws IOException {
+    /**Run with -c for command line only*/
+    public static void main(String[] args) throws IOException, AWTException {
         //load params from ini file
         try {
             loadIniFile();
@@ -35,7 +38,6 @@ public class Desktop_Server {
         
         //open itunes reader if ini file has it
         boolean useiTunesDataLibraryFile=false;
-        RandomAccessFile readituneslibrary = null;
         if(iTunesDataLibraryFile!=null && !iTunesDataLibraryFile.equals("")){
             useiTunesDataLibraryFile=true;
             try{
@@ -55,26 +57,40 @@ public class Desktop_Server {
             Runtime.getRuntime().exec(adbExe+" reverse tcp:9091 tcp:9091");
         }
         
-        //listen for user command to end server
-        String userend="";
-        Scanner in=new Scanner(System.in);
-        System.out.println("Type 'end' to end the server. Type 'R' to force a full resync, 'N' for a normal sync.");
-        while(listen){
-            userend=in.next();
-            if(userend.equalsIgnoreCase("end")){
-                listen=false;
-                listener.stop_connection();
-            }else if(userend.equalsIgnoreCase("R")){
-                sync_type="R";
-            }else if(userend.equalsIgnoreCase("N")){
-                sync_type="N";
+        if(args.length==0){
+            new GUI();
+        }else if(args[0].equals("-c")){
+            //listen for user command to end server
+            String userend="";
+            Scanner in=new Scanner(System.in);
+            System.out.println("Type 'end' to end the server. Type 'R' to force a full resync, 'N' for a normal sync.");
+            while(listen){
+                userend=in.next();
+                if(userend.equalsIgnoreCase("end")){
+                    listen=false;
+                    listener.stop_connection();
+                }else if(userend.equalsIgnoreCase("R")){
+                    sync_type="R";
+                }else if(userend.equalsIgnoreCase("N")){
+                    sync_type="N";
+                }
             }
+            in.close();
+            exit();
         }
         
+    }
+    
+    public static void exit(){
         System.out.println("Exiting");
-        Runtime.getRuntime().exec(adbExe+" reverse --remove tcp:9091");
-        in.close();
-        readituneslibrary.close();
+        try {
+            if(!adbExe.isEmpty()){
+                Runtime.getRuntime().exec(adbExe+" reverse --remove tcp:9091");
+            }
+            readituneslibrary.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     
     /**

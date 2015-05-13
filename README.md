@@ -49,5 +49,5 @@ ffmpeg
 FAQ
 -
 To use the usb connection ability:  
-	1. The android sdk must be installed. A version is included in the packaged zip file, but if you already have it installed, you need the adb.exe executable usually installed in C:\Users\[User]\AppData\Local\Android\android-sdk\platform-tools by the android sdk.  
+	1. The android adb exe must be linked in the ini. A version is included in the packaged zip file, but if you already have it installed, you need the adb.exe executable usually installed in C:\Users\[User]\AppData\Local\Android\android-sdk\platform-tools by the android sdk.  
 	2. Make sure you have the drivers for your phone installed (use manufacuror's drivers), or the phone may not be detected when plugged in via usb.    
