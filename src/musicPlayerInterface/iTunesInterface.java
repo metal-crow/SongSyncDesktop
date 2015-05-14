@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
 
+import main.Desktop_Server;
+
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.javatuples.Pair;
 
@@ -125,7 +127,7 @@ public class iTunesInterface {
 
                     //make sure that the path and ITC2 file exists
                     if(pathtToITC2ArtFile.exists() && pathtToITC2ArtFile.list().length!=0){
-                        System.out.print(" Found iTunes art");
+                        Desktop_Server.gui.status_update(" Found iTunes art");
                         extractPNGfromITC2(new FileInputStream(pathtToITC2ArtFile.getPath()+"/"+pathtToITC2ArtFile.list()[0]));
                     }
                     

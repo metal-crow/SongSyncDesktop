@@ -44,9 +44,9 @@ public class Listener_Thread extends Parent_Thread {
         try{
             //open server socket
             androidConnection=new ServerSocket(9091);
-            System.out.println("Listening on port "+androidConnection.getLocalPort()+" at host "+androidConnection.getInetAddress().getHostName());
+            Desktop_Server.gui.status_update("Listening on port "+androidConnection.getLocalPort()+" at host "+androidConnection.getInetAddress().getHostName()+"\n");
         }catch(IOException e){
-            System.out.println("Socket Creation Failure.");
+            Desktop_Server.gui.status_update("Socket Creation Failure.\n");
             e.printStackTrace();
             listen=false;
             return;
@@ -56,7 +56,7 @@ public class Listener_Thread extends Parent_Thread {
         while(listen){
             try{
                 Socket phone = androidConnection.accept();
-                System.out.println("Sync Connection Recived.");
+                Desktop_Server.gui.status_update("Sync Connection Recived.\n");
                 
                 PrintWriter out=new PrintWriter(new OutputStreamWriter(phone.getOutputStream(), "utf-8"), true);//writer for song names/length
                 BufferedReader in=new BufferedReader(new InputStreamReader(phone.getInputStream(), "utf-8"));//listener for phone requests/info
@@ -96,7 +96,7 @@ public class Listener_Thread extends Parent_Thread {
                         new File(songpath).delete();
                     }catch(IOException | InterruptedException e){
                         e.printStackTrace();
-                        System.out.println("Converion failure for "+request);
+                        Desktop_Server.gui.status_update("Converion failure for "+request+"\n");
                     }
                     request=in.readLine();
                 }
@@ -126,10 +126,10 @@ public class Listener_Thread extends Parent_Thread {
                 in.close();
                 pout.close();       
                 phone.close();
-                System.out.println("Sync finished");
+                Desktop_Server.gui.status_update("Sync finished.\n");
             }catch(Exception e){
                 if(listen){
-                    System.err.println("Unrecoverable network/file io error.");
+                    Desktop_Server.gui.status_update("Unrecoverable network/file io error.\n");
                     e.printStackTrace();
                 }
             }
@@ -160,7 +160,7 @@ public class Listener_Thread extends Parent_Thread {
         if(confirm.equals("READY")){
             //write the bytes to the phone (this is auto split into smaller packets)
             pout.write(songinbyte,0,songinbyte.length);
-            System.out.println("Wrote song");
+            Desktop_Server.gui.status_update("Wrote song\n");
             pout.flush();
         }        
     }

@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 
+import main.Desktop_Server;
 import musicPlayerInterface.iTunesInterface;
 
 
@@ -42,7 +43,7 @@ public class Parent_Thread extends Thread {
      * @param song
      */
     protected void removeSong(String song){
-        System.out.println("Song "+song+"being removed from music database.");
+        Desktop_Server.gui.status_update("Song "+song+"being removed from music database.");
         File song_to_delete=new File(musicDirectoryPath+song);
         boolean deleted=song_to_delete.delete();
         if(!deleted){
@@ -59,7 +60,7 @@ public class Parent_Thread extends Thread {
      */
     protected String convertSong(String request) throws IOException, InterruptedException {
         String songpath=musicDirectoryPath+request;
-        System.out.print("Got request for "+request);
+        Desktop_Server.gui.status_update("Got request for "+request);
         
         //find the songs filetype, and convert it if it needs to be converted
         String filetype=songpath.substring(songpath.lastIndexOf("."));
@@ -69,7 +70,7 @@ public class Parent_Thread extends Thread {
                 if(useiTunesDataLibraryFile){
                     metadata=iTunesInterface.scanForitunesMetadata(request,readituneslibrary,iTunesDataLibraryFile);
                 }
-                System.out.print(" Converting song");
+                Desktop_Server.gui.status_update(" Converting song");
                 conversion(songpath, metadata);
                 //change the file to point to the converted song
                 songpath="tempout"+convertMusicTo;

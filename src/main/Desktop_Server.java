@@ -1,4 +1,8 @@
 package main;
+import gui.GUI_Parent;
+import gui.GUI_Taskbar;
+import gui.GUI_cmd;
+
 import java.awt.AWTException;
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,7 +12,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.Scanner;
 
 import threads.Listener_Thread;
 
@@ -21,11 +24,11 @@ public class Desktop_Server {
     private static String convertMusicTo;
     private static String ffmpegCommand;
     private static String adbExe;
-    public static volatile boolean listen=true;
     public volatile static String sync_type="N";//what type of sync we're doing. Need threads to be able to edit
     private static RandomAccessFile readituneslibrary;
+    public static GUI_Parent gui;
+    private static Listener_Thread listener;
     
-    /**Run with -c for command line only*/
     public static void main(String[] args) throws IOException, AWTException {
         //load params from ini file
         try {
@@ -48,41 +51,32 @@ public class Desktop_Server {
             }
         }
         
-        //start the connection listener thread
-        Listener_Thread listener=new Listener_Thread(musicDirectoryPath,convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile, ffmpegEXElocation, ffmpegCommand);
-        listener.start();
+        //gui setup
+        if(args.length==0){
+            gui=new GUI_Taskbar();
+        }
+        //command line gui only
+        else if(args[0].equals("-c")){
+            gui=new GUI_cmd();
+        }
+        //silence all gui
+        else if(args[0].equals("-n")){
+            
+        }
+        
         //reverse port to allow local connection via usb
         //connections to localhost on the device will be forwarded to localhost on the host
         if(!adbExe.isEmpty()){
             Runtime.getRuntime().exec(adbExe+" reverse tcp:9091 tcp:9091");
         }
         
-        if(args.length==0){
-            new GUI();
-        }else if(args[0].equals("-c")){
-            //listen for user command to end server
-            String userend="";
-            Scanner in=new Scanner(System.in);
-            System.out.println("Type 'end' to end the server. Type 'R' to force a full resync, 'N' for a normal sync.");
-            while(listen){
-                userend=in.next();
-                if(userend.equalsIgnoreCase("end")){
-                    listen=false;
-                    listener.stop_connection();
-                }else if(userend.equalsIgnoreCase("R")){
-                    sync_type="R";
-                }else if(userend.equalsIgnoreCase("N")){
-                    sync_type="N";
-                }
-            }
-            in.close();
-            exit();
-        }
-        
+        //start the connection listener thread
+        listener=new Listener_Thread(musicDirectoryPath,convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile, ffmpegEXElocation, ffmpegCommand);
+        listener.start();
     }
     
     public static void exit(){
-        System.out.println("Exiting");
+        listener.stop_connection();
         try {
             if(!adbExe.isEmpty()){
                 Runtime.getRuntime().exec(adbExe+" reverse --remove tcp:9091");
