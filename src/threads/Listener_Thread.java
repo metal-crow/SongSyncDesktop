@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -44,7 +45,7 @@ public class Listener_Thread extends Parent_Thread {
         try{
             //open server socket
             androidConnection=new ServerSocket(9091);
-            Desktop_Server.gui.status_update("Listening on port "+androidConnection.getLocalPort()+" at host "+androidConnection.getInetAddress().getHostName()+"\n");
+            Desktop_Server.gui.status_update("Listening on port "+androidConnection.getLocalPort()+" at host "+InetAddress.getLocalHost().getHostAddress()+"\n");
         }catch(IOException e){
             Desktop_Server.gui.status_update("Socket Creation Failure.\n");
             e.printStackTrace();
@@ -84,6 +85,7 @@ public class Listener_Thread extends Parent_Thread {
                 }
                 //tell phone done writing song list
                 out.println("ENDOFLIST");
+                Desktop_Server.gui.progress_max(songs.size());
                 songs=null;//gc this, huge list of strings that we no longer need
                 
                 //recieve the request list from the phone and send over each song per request
@@ -94,6 +96,7 @@ public class Listener_Thread extends Parent_Thread {
                         sendSong(songpath, out, pout, in);
                         //clean up tmp file
                         new File(songpath).delete();
+                        Desktop_Server.gui.progress_update();
                     }catch(IOException | InterruptedException e){
                         e.printStackTrace();
                         Desktop_Server.gui.status_update("Converion failure for "+request+"\n");

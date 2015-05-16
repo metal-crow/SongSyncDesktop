@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
 import threads.Listener_Thread;
+import threads.ServerDiscoveryThread;
 
 
 public class Desktop_Server {
@@ -28,6 +29,7 @@ public class Desktop_Server {
     private static RandomAccessFile readituneslibrary;
     public static GUI_Parent gui;
     private static Listener_Thread listener;
+    private static ServerDiscoveryThread discover;
     
     public static void main(String[] args) throws IOException, AWTException {
         //load params from ini file
@@ -73,9 +75,14 @@ public class Desktop_Server {
         //start the connection listener thread
         listener=new Listener_Thread(musicDirectoryPath,convertMusicTo, useiTunesDataLibraryFile, readituneslibrary, iTunesDataLibraryFile, ffmpegEXElocation, ffmpegCommand);
         listener.start();
+        
+        //start the server discoverer thread
+        discover=new ServerDiscoveryThread();
+        discover.start();
     }
     
     public static void exit(){
+        discover.stop_connection();
         listener.stop_connection();
         try {
             if(!adbExe.isEmpty()){
