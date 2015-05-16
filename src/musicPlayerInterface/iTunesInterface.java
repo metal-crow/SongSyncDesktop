@@ -127,7 +127,7 @@ public class iTunesInterface {
 
                     //make sure that the path and ITC2 file exists
                     if(pathtToITC2ArtFile.exists() && pathtToITC2ArtFile.list().length!=0){
-                        Desktop_Server.gui.status_update(" Found iTunes art");
+                        Desktop_Server.gui.progress_text(" Found iTunes art");
                         extractPNGfromITC2(new FileInputStream(pathtToITC2ArtFile.getPath()+"/"+pathtToITC2ArtFile.list()[0]));
                     }
                     

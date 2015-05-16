@@ -16,6 +16,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 import main.Desktop_Server;
@@ -26,7 +28,11 @@ public class GUI_Taskbar implements GUI_Parent{
     private static SystemTray tray;
     private static JFrame displayMenu =new JFrame("Sync Status");
     
-    private static JLabel current_op=new JLabel();
+    private static JLabel status_1=new JLabel();
+    private static JLabel status_2=new JLabel();
+    private static JProgressBar current_prog_bar=new JProgressBar();
+    private int cur_prog=0;
+    private static JTextArea status_progr=new JTextArea();
 
     public GUI_Taskbar() throws AWTException{
         if (!SystemTray.isSupported()) {
@@ -54,15 +60,19 @@ public class GUI_Taskbar implements GUI_Parent{
         
         //main menu
         displayMenu.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        displayMenu.setSize(100, 100);
         displayMenu.setIconImage(new ImageIcon("icon.png").getImage());
+        displayMenu.setPreferredSize(new Dimension(300,180));
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-        displayMenu.setLocation(dim.width/2-displayMenu.getSize().width/2, dim.height/2-displayMenu.getSize().height/2);
+        displayMenu.setLocation(dim.width/2, dim.height/2);
         displayMenu.pack();
         displayMenu.setVisible(false);
         
         JPanel status=new JPanel();
-        status.add(current_op);
+        status.setPreferredSize(new Dimension(300,300));
+        status.add(status_1);
+        status.add(status_2);
+        status.add(current_prog_bar);
+        status.add(status_progr);
         
         displayMenu.add(status);
 
@@ -76,15 +86,26 @@ public class GUI_Taskbar implements GUI_Parent{
 
         trayIcon.setPopupMenu(popup);
         tray.add(trayIcon);
-        
     }
     
-    public void status_update(String a){
-        current_op.setText(a);
+    public void current_status(String a, int line){
+        if(line==1){
+            status_1.setText(a);
+        }else if(line==2){
+            status_2.setText(a);
+        }
+    }
+    
+    public void progress_text(String a){
+        status_progr.append(a);
+    }
+    
+    public void progress_max(int a){
+        current_prog_bar.setMaximum(a);
     }
     
     public void progress_update(){
-        
+        current_prog_bar.setValue(cur_prog++);
     }
     
     public void exit(){

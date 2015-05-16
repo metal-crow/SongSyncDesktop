@@ -21,7 +21,7 @@ public class ServerDiscoveryThread extends Thread {
             socket = new DatagramSocket(9091, InetAddress.getByName("0.0.0.0"));
             socket.setBroadcast(true);
         }catch(IOException e){
-            Desktop_Server.gui.status_update("Couldnt open Discovery thread listener.\n");
+            Desktop_Server.gui.current_status("Couldnt open Discovery thread listener.\n",2);
             e.printStackTrace();
             listen=false;
             return;

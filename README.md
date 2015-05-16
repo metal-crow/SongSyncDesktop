@@ -22,23 +22,7 @@ Notes
 -
 ITunes doesnt write song info to music file metadata, cant assume that about the music for itunes or other media players.  
 Just copy over the entire filestructure directly, so we dont worry about metadata or duplicates. That should have been handled by the music player when making the filestucture.    
-  
-`ToDo`:
- 
-   * <s>add itunes library info to mp3 tags before sending</s>  
-   * <s>do not convert to mp3 if file is already mp3, only remux</s>  
-   * <s>make conversion optional</s>  
-   * <s>add itunes album art to mp3</s>  
-   * <s>send over playlists</s>  
-   * chose what playlists to transfer  
-   * <s>choose what to convert song to(codec list)</s>  
-   * <s>delete all songs on phone and resend them if conversion type changes</s> 
-   * <s>detect when to force full resync (if conversion bitrate,type,etc changes)</s> 
-   * <s>handle sending music over direct usb link</s>  
-   * <s>ability to pass info about what music to delete from phone to computer</s>  
-   * Test what happens if song is dropped, fix it  
-   * <s>Add a way for user to end the server</s>  
-  
+   
 **Using:**   
 Apache common lang library  
 JavaTuples  
@@ -51,3 +35,5 @@ FAQ
 To use the usb connection ability:  
 	1. The android adb exe must be linked in the ini. A version is included in the packaged zip file, but if you already have it installed, you need the adb.exe executable usually installed in C:\Users\[User]\AppData\Local\Android\android-sdk\platform-tools by the android sdk.  
 	2. Make sure you have the drivers for your phone installed (use manufacuror's drivers), or the phone may not be detected when plugged in via usb.    
+	
+Untested, but the wifi sync feature should work over the internet. Just set the ip address, and set up port forwarding on the router.

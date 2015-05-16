@@ -27,19 +27,30 @@ public class GUI_cmd implements GUI_Parent{
     }
 
     @Override
-    public void status_update(String a) {
-        System.out.print(a);
-    }
-
-    @Override
-    public void progress_update() {
-        
-    }
-
-    @Override
     public void exit() {
         System.out.println("Exiting"); 
         Desktop_Server.exit();
     }
 
+    @Override
+    public void current_status(String a, int line) {
+        System.out.println(a);
+    }
+
+    @Override
+    public void progress_max(int a) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void progress_update() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void progress_text(String a) {
+        System.out.println(a);        
+    }
 }
