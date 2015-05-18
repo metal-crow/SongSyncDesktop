@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.AWTException;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
@@ -12,6 +13,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -68,10 +70,20 @@ public class GUI_Taskbar implements GUI_Parent{
         displayMenu.setVisible(false);
         
         JPanel status=new JPanel();
+        status.setLayout(new BoxLayout(status, BoxLayout.PAGE_AXIS));
         status.setPreferredSize(new Dimension(300,300));
+        
+        status_1.setAlignmentX(Component.CENTER_ALIGNMENT);
         status.add(status_1);
+        
+        status_2.setAlignmentX(Component.CENTER_ALIGNMENT);
         status.add(status_2);
+        
+        current_prog_bar.setVisible(false);
         status.add(current_prog_bar);
+
+        status_progr.setAlignmentX(Component.CENTER_ALIGNMENT);
+        status_progr.setEditable(false);
         status.add(status_progr);
         
         displayMenu.add(status);
@@ -93,6 +105,7 @@ public class GUI_Taskbar implements GUI_Parent{
             status_1.setText(a);
         }else if(line==2){
             status_2.setText(a);
+            status_progr.append(a+"\n");
         }
     }
     
@@ -101,7 +114,10 @@ public class GUI_Taskbar implements GUI_Parent{
     }
     
     public void progress_max(int a){
+        current_prog_bar.setIndeterminate(false);
         current_prog_bar.setMaximum(a);
+        current_prog_bar.setVisible(true);
+        cur_prog=0;
     }
     
     public void progress_update(){
@@ -112,5 +128,18 @@ public class GUI_Taskbar implements GUI_Parent{
         tray.remove(trayIcon);
         displayMenu.dispose();
         Desktop_Server.exit();
+    }
+
+    @Override
+    public void progress_indeterm() {
+        current_prog_bar.setIndeterminate(true);
+        current_prog_bar.setVisible(true);        
+    }
+
+    @Override
+    public void reset() {
+        //wait a few seconds before resetting
+        current_prog_bar.setValue(0);
+        status_2.setText("");
     }
 }

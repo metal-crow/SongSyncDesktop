@@ -64,6 +64,8 @@ public class Listener_Thread extends Parent_Thread {
                 BufferedOutputStream pout=new BufferedOutputStream(phone.getOutputStream());//writer for the song bytes
                 
                 //recieve all the songs the phone wants to delete
+                Desktop_Server.gui.progress_indeterm();
+                Desktop_Server.gui.current_status("Removing songs from server", 2);
                 String song_to_delete=in.readLine();
                 while(song_to_delete!=null && !song_to_delete.equals("END OF SONG DELETIONS")){
                     removeSong(song_to_delete);
@@ -75,20 +77,27 @@ public class Listener_Thread extends Parent_Thread {
                 Desktop_Server.sync_type="N";//change back sync type to normal, now that we've done a full resync
                 
                 //generate the list of all songs
+                Desktop_Server.gui.progress_indeterm();
+                Desktop_Server.gui.current_status("Reading song database", 2);
                 ArrayList<String> songs=new ArrayList<String>();
                 generateList(songs, musicDirectoryPath);
+                
                 //write the filetype of the songs
                 out.println(convertMusicTo);
                 //write out all songs
+                Desktop_Server.gui.progress_max(songs.size());
+                Desktop_Server.gui.current_status("Sending song list to phone", 2);
                 for(String song:songs){
+                    Desktop_Server.gui.progress_update();
                     out.println(song);
                 }
                 //tell phone done writing song list
                 out.println("ENDOFLIST");
-                Desktop_Server.gui.progress_max(songs.size());
                 songs=null;//gc this, huge list of strings that we no longer need
                 
                 //recieve the request list from the phone and send over each song per request
+                Desktop_Server.gui.current_status("Sending requested songs to phone", 2);
+                Desktop_Server.gui.progress_indeterm();
                 String request=in.readLine();
                 while(request!=null && !request.equals("END OF SONG DOWNLOADS")){
                     try{
@@ -96,7 +105,6 @@ public class Listener_Thread extends Parent_Thread {
                         sendSong(songpath, out, pout, in);
                         //clean up tmp file
                         new File(songpath).delete();
-                        Desktop_Server.gui.progress_update();
                     }catch(IOException | InterruptedException e){
                         e.printStackTrace();
                         Desktop_Server.gui.progress_text("Converion failure for "+request+"\n");
@@ -114,12 +122,19 @@ public class Listener_Thread extends Parent_Thread {
                  */
                 if(useiTunesDataLibraryFile){
                     ArrayList<Pair<String, ArrayList<String>>> playlists=iTunesInterface.generateM3UPlaylists(readituneslibrary);
+                    
+                    Desktop_Server.gui.current_status("Sending playlists to phone", 2);
+                    Desktop_Server.gui.progress_max(playlists.size());
+
                     for(Pair<String,ArrayList<String>> playlist:playlists){
                         out.println(playlist.getValue0());//write playlist name
                         //write all songs in playlist
                         for(String song:playlist.getValue1()){
                             out.println(song);
                         }
+                        Desktop_Server.gui.progress_text("Sent playlist "+playlist.getValue0()+"\n");
+                        Desktop_Server.gui.progress_update();
+                        
                         out.println("NEW LIST");
                     }
                 }
@@ -130,6 +145,7 @@ public class Listener_Thread extends Parent_Thread {
                 pout.close();       
                 phone.close();
                 Desktop_Server.gui.current_status("Sync finished.\n",2);
+                Desktop_Server.gui.reset();
             }catch(Exception e){
                 if(listen){
                     Desktop_Server.gui.current_status("Unrecoverable network/file io error.\n",2);

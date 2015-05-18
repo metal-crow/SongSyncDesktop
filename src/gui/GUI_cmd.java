@@ -53,4 +53,16 @@ public class GUI_cmd implements GUI_Parent{
     public void progress_text(String a) {
         System.out.println(a);        
     }
+
+    @Override
+    public void progress_indeterm() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void reset() {
+        // TODO Auto-generated method stub
+        
+    }
 }

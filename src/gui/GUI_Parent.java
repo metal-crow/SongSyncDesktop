@@ -11,4 +11,8 @@ public interface GUI_Parent {
     public void progress_update();
     
     public void progress_text(String a);
+    
+    public void progress_indeterm();
+    
+    public void reset();
 }
