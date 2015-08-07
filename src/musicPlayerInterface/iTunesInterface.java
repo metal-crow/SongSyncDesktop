@@ -222,8 +222,8 @@ public class iTunesInterface {
         return Array_of_List_Of_Playlists;
     }
     
-    private static final byte[] headerstart={(byte)0,(byte)0,(byte)0,(byte)100,(byte)97,(byte)116,(byte)97,(byte)137};//the png header. The last byte is the real png starting byte
-    private static final byte[] pngend={(byte)69,(byte)78,(byte)68,(byte)174,(byte)66,(byte)96,(byte)130,(byte)0};//the end of the png file
+    private static final byte[] headerstart={(byte)137, (byte)80, (byte)78, (byte)71, (byte)13, (byte)10, (byte)26, (byte)10};//the png header.
+    private static final byte[] pngend={(byte)73,(byte)69,(byte)78,(byte)68,(byte)174,(byte)66,(byte)96,(byte)130};//the end of the png file
     /**
      * Decypher the ITC2 file, graph the png album art from it, and write it to the local directory as tempalbumart.png
      * See http://nada-labs.net/2010/file-format-reverse-engineering-an-introduction/comment-page-1/
@@ -232,12 +232,16 @@ public class iTunesInterface {
      */
     private static void extractPNGfromITC2(FileInputStream in) throws IOException{
         FileOutputStream out=new FileOutputStream("tempalbumart.jpg");
-        boolean writeout=false;
-        int headersfound=0;
         int c;
         byte[] bufferforcheck=new byte[8];
+        int curPosition = 0;
+        int positionOfPNG = 0;
+        int lengthOfPng = 0;
         
+        // itunes stores a different number of resizes depending on source img res. find the last(and largest) one.
         while ((c = in.read()) != -1) {
+            curPosition++;
+            
             //shift the buffer 1 byte left
             for(int i=1;i<8;i++){
                 bufferforcheck[i-1]=bufferforcheck[i];
@@ -247,18 +251,22 @@ public class iTunesInterface {
             
             //check the buffer if it matches the header
             if(Arrays.equals(bufferforcheck, headerstart)){
-                writeout=true;
-                headersfound++;
+                positionOfPNG = curPosition - headerstart.length;
             }
             //check the buffer if it matched the end of the png file
             else if(Arrays.equals(bufferforcheck, pngend)){
-                writeout=false;
-            }
-            //for pngs the 3rd png header indicates the largest sized png
-            if(writeout && headersfound==3){
-                out.write(c);
+                lengthOfPng = curPosition - positionOfPNG ;
             }
         }
+        
+        //reset to png position
+        in.getChannel().position(positionOfPNG);
+
+        byte[] artFile = new byte[lengthOfPng];
+        in.read(artFile, 0, lengthOfPng);
+        
+        out.write(artFile);
+        
         out.close();
     }
     

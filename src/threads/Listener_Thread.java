@@ -45,7 +45,7 @@ public class Listener_Thread extends Parent_Thread {
         try{
             //open server socket
             androidConnection=new ServerSocket(9091);
-            Desktop_Server.gui.current_status("Listening on port "+androidConnection.getLocalPort()+" at host "+InetAddress.getLocalHost().getHostAddress()+"\n",1);
+            Desktop_Server.gui.current_status("Listening for a connection request on port "+androidConnection.getLocalPort()+" at host "+InetAddress.getLocalHost().getHostAddress()+"\n",1);
         }catch(IOException e){
             Desktop_Server.gui.current_status("Socket Creation Failure.\n",1);
             e.printStackTrace();
