@@ -60,6 +60,7 @@ public class Desktop_Server {
         //command line gui only
         else if(args[0].equals("-c")){
             gui=new GUI_cmd();
+            new Thread((GUI_cmd)gui).start();
         }
         //silence all gui
         else if(args[0].equals("-n")){

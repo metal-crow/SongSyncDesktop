@@ -4,11 +4,11 @@ import java.util.Scanner;
 
 import main.Desktop_Server;
 
-public class GUI_cmd implements GUI_Parent{
+public class GUI_cmd implements GUI_Parent, Runnable{
     
     private static Scanner in=new Scanner(System.in);
 
-    public GUI_cmd() {
+    public void run() {
         //listen for user command to end server
         String userend="";
         System.out.println("Type 'end' to end the server. Type 'R' to force a full resync, 'N' for a normal sync.");    
