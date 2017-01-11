@@ -195,7 +195,7 @@ public class Parent_Thread extends Thread {
     }
     
     /**
-     * This is only used for debugging purposes, and should be inserted into code to test.
+     * This is only used for debugging purposes, and is disabled/enabled via print_cmd_output.
      * @param p
      * @throws IOException
      */
@@ -223,7 +223,7 @@ public class Parent_Thread extends Thread {
         for(File f:folder.listFiles()){
             //i could check if this is a music file, but i might forget a file type
             //im just going to assume the filestucture is all music files
-            if(f.isFile()){
+            if(f.isFile() && !f.getName().contains("jpg")){
                 //we only want the music filesystem structure path, so remove the musicDirectoryPath bit
                 String file=f.getPath().substring(musicDirectoryPath.length());
                 file=file.replaceAll("\\\\", "/");
