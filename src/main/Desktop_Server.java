@@ -71,7 +71,7 @@ public class Desktop_Server {
         //connections to localhost on the device will be forwarded to localhost on the host
         //TODO this doesnt work if server started before phone plugged in
         if(!adbExe.isEmpty()){
-            Runtime.getRuntime().exec(adbExe+" reverse tcp:9091 tcp:9091");
+            assert(Runtime.getRuntime().exec(adbExe+" reverse tcp:9091 tcp:9091").exitValue()==0);
         }
         
         //start the connection listener thread

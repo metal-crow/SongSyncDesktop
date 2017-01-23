@@ -35,5 +35,9 @@ FAQ
 To use the usb connection ability:  
 	1. The android adb exe must be linked in the ini. A version is included in the packaged zip file, but if you already have it installed, you need the adb.exe executable usually installed in C:\Users\[User]\AppData\Local\Android\android-sdk\platform-tools by the android sdk.  
 	2. Make sure you have the drivers for your phone installed (use manufacuror's drivers), or the phone may not be detected when plugged in via usb.    
+	3. Make sure your phone's Android debugging mode is turned on (under developer settings).
+	
+The app is using internal storage:
+	Yeah. You have to root your phone, then enable all apps to write to the sd card. Its insecure, but I don't want to rewrite this for new android.
 	
 Untested, but the wifi sync feature should work over the internet. Just set the ip address, and set up port forwarding on the router.
