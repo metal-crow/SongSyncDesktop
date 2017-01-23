@@ -1,5 +1,8 @@
 SongSync, The free and open source TuneSync replacement
 ==========================
+##NOTICE: No longer being worked on
+Since android 5.0 added the weird SD card permissions stuff, and since I'm not an android dev, I'm not going to be updating this. I recommend you switch to [iSyncr](http://www.jrtstudio.com/iSyncr-iTunes-for-Android) for your iTunes->Android syncing needs.
+
 
 Additional functions over TuneSync
 -
